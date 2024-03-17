@@ -16,8 +16,54 @@
 #ifndef TASK_H
 #define TASK_H
 
+#include <string>
+#include <unordered_set>
+
+#include "date.h"
+
+using TagContainer = std::unordered_set<std::string>;
+
 class Task {
 
+    private:
+        std::string ident;
+        Date dueDate;
+        bool complete = false;
+        TagContainer tags;
+
+    public:
+        explicit Task(std::string ident);
+        ~Task() = default;
+
+        const std::string& getIdent() const noexcept;
+        void Task::setIdent(std::string ident) noexcept;
+
+        bool addTag(const std::string& tag);
+        bool deleteTag(const std::string& tag);
+        unsigned int numTags() const noexcept;
+        bool containsTag(const std::string& tag) const noexcept;
+
+        Date getDueDate() const noexcept;
+        void setDueDate(const Date& dueDate) noexcept;
+
+        void setComplete(bool complete) noexcept;
+        bool isComplete() const noexcept;
+
+        friend bool operator==(const Task& task1, const Task& task2) noexcept;
+
+        std::string str() const;
+
 };
+
+
+
+struct NoTagError : public std::out_of_range {
+  explicit NoTagError(const std::string &tag)
+      : std::out_of_range("unknown tag with identifier '" + tag + "'") {}
+
+  ~NoTagError() override = default;
+};
+
+
 
 #endif // TASK_H

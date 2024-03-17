@@ -57,7 +57,7 @@ int App::run(int argc, char *argv[]) {
       break;
 
     case Action::JSON:
-      throw std::runtime_error("json not implemented");
+      std::cout << getJSON(tlObj);
       break;
 
     case Action::UPDATE:
@@ -148,6 +148,8 @@ cxxopts::Options App::cxxoptsSetup() {
 App::Action App::parseActionArgument(cxxopts::ParseResult &args) {
 // enum Action { CREATE, JSON, DELETE, UPDATE };
   std::string input = args["action"].as<std::string>();
+  std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+  
   if(input == "create") {
     return Action::CREATE;
   } else if(input == "json") {

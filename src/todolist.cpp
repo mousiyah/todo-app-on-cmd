@@ -6,6 +6,9 @@
 //
 // Canvas: https://canvas.swansea.ac.uk/courses/44636
 // -----------------------------------------------------
+#include <string>
+#include <fstream>
+
 #include "todolist.h"
 
 // TODO Write a TodoList constructor that takes no parameters and constructs an
@@ -14,12 +17,18 @@
 // Example:
 //  TodoList tObj{};
 
+TodoList::TodoList() {}
+
 // TODO Write a function, size, that takes no parameters and returns an unsigned
 //  int of the number of projects the TodoList contains.
 //
 // Example:
 //  TodoList tObj{};
 //  auto size = tObj.size();
+
+unsigned int TodoList::size() const noexcept{
+    return projects.size();
+}
 
 // TODO Write a function, newProject, that takes one parameter, a project
 //  identifier, and returns the Project object as a reference. If an object
@@ -30,7 +39,24 @@
 // Example:
 //  TodoList tObj{};
 //  tObj.newProject("projectIdent");
+Project& TodoList::newProject(const std::string& ident) {
 
+    if (containsProject(ident)) {
+        return projects[ident];
+    } else {
+        auto [it, success] = projects.emplace(ident, Project(ident));
+
+        if (!success) {
+            throw AddProjectError(ident);
+        } else {
+            return it->second;
+        }
+    }
+}
+
+bool TodoList::containsProject(const std::string& ident) {
+    return projects.find(ident) != projects.end();
+}
 
 // TODO Write a function, addProject, that takes one parameter, a Project
 //  object, and returns true if the object was successfully inserted. If an
@@ -43,6 +69,28 @@
 //  TodoList tObj{};
 //  Project cObj{"projectIdent"};
 //  tObj.addProject(cObj);
+bool TodoList::addProject(const Project& project) {
+
+    std::string ident = project.getIdent();
+
+    if (containsProject(ident)) {
+        mergeProjects(projects[ident], project);
+        return false;
+    } else {
+        auto [it, success] = projects.emplace(ident, project);
+
+        if (!success) {
+            throw AddProjectError(ident);
+        } else {
+            return true;
+        }
+    }
+}
+
+// TODO
+void TodoList::mergeProjects(const Project& oldProject, const Project& newProject) {
+
+}
 
 // TODO Write a function, getProject, that takes one parameter, a Project
 //  identifier and returns the Project. If no Project exists, throw an
@@ -52,6 +100,15 @@
 //  TodoList tObj{};
 //  tObj.newProject("projectIdent");
 //  auto cObj = tObj.getProject("projectIdent");
+Project& TodoList::getProject(const std::string& ident) {
+    
+    if(containsProject(ident)) {
+        return projects[ident];
+    } else {
+        throw NoProjectError(ident);
+    }
+
+}
 
 // TODO Write a function, deleteProject, that takes one parameter, a Project
 //  identifier, and deletes it from the container, and returns true if the
@@ -61,6 +118,16 @@
 //  TodoList tObj{};
 //  tObj.newProject("projectIdent");
 //  tObj.deleteProject("projectIdent");
+bool TodoList::deleteProject(const std::string& ident) {
+
+    if(containsProject(ident)) {
+        auto erased = projects.erase(ident);
+        return erased > 0;
+    } else {
+        throw NoProjectError(ident);
+    }
+    
+}
 
 // TODO Write a function, load, that takes one parameter, a std::string,
 //  containing the filename for the database. Open the file, read the contents,
@@ -131,6 +198,10 @@
 //  TodoList tObj{};
 //  tObj.load("database.json");
 
+void TodoList::load(const std::string& filename) {
+    JSONParser::parse(FileIO::openFile(filename), *this);
+}
+
 // TODO Write a function, save, that takes one parameter, the path of the file
 //  to write the database to. The function should serialise the TodoList object
 //  as JSON.
@@ -140,6 +211,10 @@
 //  tObj.load("database.json");
 //  ...
 //  tObj.save("database.json");
+
+void TodoList::save(const std::string& filename) {
+    // TODO: Implement saving to JSON file
+}
 
 // TODO Write an == operator overload for the TodoList class, such that two
 //  TodoList objects are equal only if they have the exact same data.
@@ -151,6 +226,14 @@
 //    ...
 //  }
 
+bool operator==(const TodoList& todoList1, const TodoList& todoList2) {
+    return todoList1.getProjects() == todoList2.getProjects();
+}
+
+const ProjectContainer& TodoList::getProjects() const noexcept {
+    return projects;
+}
+
 
 // TODO Write a function, str, that takes no parameters and returns a
 //  std::string of the JSON representation of the data in the TodoList.
@@ -161,3 +244,71 @@
 // Example:
 //  TodoList tObj{};
 //  std::string s = tObj.str();
+
+std::string TodoList::str() const {
+    // TODO: Implement converting TodoList to JSON string
+    return "";
+}
+
+
+
+
+
+// FileIO.cpp
+std::ifstream& FileIO::openFile(const std::string& filename) {
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        throw FileOpenError(filename);
+    }
+    return file;
+}
+
+
+
+
+// JSONParser.cpp
+void JSONParser::parse(std::ifstream& file, TodoList& todoList) {
+    nlohmann::json jsonData;
+    file >> jsonData;
+
+    parseProjects(jsonData.dump(), todoList);
+}
+
+void JSONParser::parseProjects(const nlohmann::json& jsonProjects, TodoList& todoList) {
+    for (const auto& [projectName, jsonProject] : jsonProjects.items()) {
+
+        Project& project = todoList.newProject(projectName);
+
+        if (jsonProject.is_object()) {
+            parseTasks(jsonProject, project);
+        }
+    }
+}
+
+void JSONParser::parseTasks(const nlohmann::json& jsonTasks, Project& project) {
+    for (const auto& [taskName, jsonTask] : jsonTasks.items()) {
+
+        Task task(taskName);
+
+        if (jsonTask.is_object()) {
+            parseTaskAttributes(jsonTask, task);
+        }
+
+        project.addTask(task);
+    }
+}
+
+void JSONParser::parseTaskAttributes(const nlohmann::json& jsonTask, Task& task) {
+    if (jsonTask.contains("completed")) {
+        task.setComplete(jsonTask["completed"].get<bool>());
+    }
+    if (jsonTask.contains("due")) {
+        task.setDueDate(jsonTask["due"].get<std::string>());
+    }
+    if (jsonTask.contains("tags")) {
+        for (const auto& tag : jsonTask["tags"]) {
+            task.addTag(tag.get<std::string>());
+        }
+    }
+}

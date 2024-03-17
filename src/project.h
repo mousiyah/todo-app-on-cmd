@@ -13,17 +13,18 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-#include <map>
 #include <string>
-#include <utility>
+#include <map>
 
 #include "lib_json.hpp"
 
 #include "task.h"
 
-using TaskContainer = std::vector<Task>;
+using TaskContainer = std::map<std::string, Project>;
 
 class Project {
+  
+private:
   std::string ident;
   TaskContainer tasks;
 
@@ -42,10 +43,11 @@ public:
   bool containsTask(const std::string &tIdent) const noexcept;
 
   bool addTask(Task task);
+  void mergeTasks(const Task& oldTask, const Task& newTask);
   Task &getTask(const std::string &tIdent);
   bool deleteTask(const std::string &tIdent);
 
-  friend bool operator==(const Project &c1, const Project &c2);
+  friend bool operator==(const Project& project1, const Project& project2);
 
   nlohmann::json json() const;
   std::string str() const;
@@ -68,23 +70,22 @@ public:
   }
 };
 
+
+
 struct AddTaskError : public std::runtime_error {
   explicit AddTaskError(const std::string &tIdent)
-      : std::runtime_error("could not add task with identifier '" + tIdent +
-                           "'") {
-    /* do nothing */
-  }
+      : std::runtime_error("could not add task with identifier '" + tIdent + "'") {}
 
   ~AddTaskError() override = default;
 };
 
 struct NoTaskError : public std::out_of_range {
   explicit NoTaskError(const std::string &tIdent)
-      : std::out_of_range("unknown task with identifier '" + tIdent + "'") {
-    /* do nothing */
-  }
+      : std::out_of_range("unknown task with identifier '" + tIdent + "'") {}
 
   ~NoTaskError() override = default;
 };
+
+
 
 #endif // PROJECT_H
