@@ -16,6 +16,7 @@
 //
 // Example:
 //  Task tObj{"Task Name"};
+
 Task::Task(std::string ident) : ident(std::move(ident)) {};
 
 // TODO Write a function, getIdent, that returns the identifier for the Task.
@@ -184,4 +185,18 @@ std::string Task::str() const {
     taskJson["tags"] = tagsJson;
 
     return taskJson.dump();
+}
+
+void Task::parse(const nlohmann::json& json) {
+    if (json.contains("completed")) {
+        setComplete(json["completed"].get<bool>());
+    }
+    if (json.contains("due")) {
+        setDueDate(json["due"].get<std::string>());
+    }
+    if (json.contains("tags")) {
+        for (const auto& tag : json["tags"]) {
+            addTag(tag.get<std::string>());
+        }
+    }
 }

@@ -53,6 +53,8 @@ class Task {
 
         std::string str() const;
 
+        void parse(const nlohmann::json& json);
+
 };
 
 

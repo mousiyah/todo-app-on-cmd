@@ -33,8 +33,8 @@ public:
   ~Project() = default;
 
   unsigned int size() const noexcept;
-  const std::string &getIdent() const noexcept;
 
+  const std::string &getIdent() const noexcept;
   void setIdent(std::string pIdent) noexcept;
 
   const TaskContainer &getTasks() const noexcept;
@@ -51,23 +51,8 @@ public:
 
   nlohmann::json json() const;
   std::string str() const;
+  void parse(const nlohmann::json& json);
 
-  // Wrappers for iterating over the nested container
-  inline TaskContainer::iterator begin() { return tasks.begin(); }
-  inline TaskContainer::const_iterator cbegin() const { return tasks.cbegin(); }
-
-  inline TaskContainer::iterator end() { return tasks.end(); }
-  inline TaskContainer::const_iterator cend() const { return tasks.cend(); }
-
-  inline TaskContainer::reverse_iterator rbegin() { return tasks.rbegin(); }
-  inline TaskContainer::const_reverse_iterator crbegin() const {
-    return tasks.crbegin();
-  }
-
-  inline TaskContainer::reverse_iterator rend() { return tasks.rend(); }
-  inline TaskContainer::const_reverse_iterator crend() const {
-    return tasks.crend();
-  }
 };
 
 

@@ -30,6 +30,10 @@ unsigned int TodoList::size() const noexcept{
     return projects.size();
 }
 
+const ProjectContainer& TodoList::getProjects() const noexcept {
+    return projects;
+}
+
 // TODO Write a function, newProject, that takes one parameter, a project
 //  identifier, and returns the Project object as a reference. If an object
 //  with the same identifier already exists, then the existing object should be
@@ -39,6 +43,7 @@ unsigned int TodoList::size() const noexcept{
 // Example:
 //  TodoList tObj{};
 //  tObj.newProject("projectIdent");
+
 Project& TodoList::newProject(const std::string& ident) {
 
     if (containsProject(ident)) {
@@ -69,6 +74,7 @@ bool TodoList::containsProject(const std::string& ident) {
 //  TodoList tObj{};
 //  Project cObj{"projectIdent"};
 //  tObj.addProject(cObj);
+
 bool TodoList::addProject(const Project& project) {
 
     std::string ident = project.getIdent();
@@ -100,6 +106,7 @@ void TodoList::mergeProjects(const Project& oldProject, const Project& newProjec
 //  TodoList tObj{};
 //  tObj.newProject("projectIdent");
 //  auto cObj = tObj.getProject("projectIdent");
+
 Project& TodoList::getProject(const std::string& ident) {
     
     if(containsProject(ident)) {
@@ -118,6 +125,7 @@ Project& TodoList::getProject(const std::string& ident) {
 //  TodoList tObj{};
 //  tObj.newProject("projectIdent");
 //  tObj.deleteProject("projectIdent");
+
 bool TodoList::deleteProject(const std::string& ident) {
 
     if(containsProject(ident)) {
@@ -199,8 +207,27 @@ bool TodoList::deleteProject(const std::string& ident) {
 //  tObj.load("database.json");
 
 void TodoList::load(const std::string& filename) {
-    JSONParser::parse(FileIO::openFile(filename), *this);
+
+    auto file = FileIO::openFile(filename);
+
+    nlohmann::json jsonData;
+    file >> jsonData;
+
+    parse(jsonData);
+    
 }
+
+void TodoList::parse(const nlohmann::json& json) {
+    for (const auto& [pIdent, jsonProject] : json.items()) {
+
+        Project& project = newProject(pIdent);
+
+        if (jsonProject.is_object()) {
+            project.parse(jsonProject);
+        }
+    }
+}
+
 
 // TODO Write a function, save, that takes one parameter, the path of the file
 //  to write the database to. The function should serialise the TodoList object
@@ -230,11 +257,6 @@ bool operator==(const TodoList& todoList1, const TodoList& todoList2) {
     return todoList1.getProjects() == todoList2.getProjects();
 }
 
-const ProjectContainer& TodoList::getProjects() const noexcept {
-    return projects;
-}
-
-
 // TODO Write a function, str, that takes no parameters and returns a
 //  std::string of the JSON representation of the data in the TodoList.
 //
@@ -255,60 +277,11 @@ std::string TodoList::str() const {
 
 
 // FileIO.cpp
-std::ifstream& FileIO::openFile(const std::string& filename) {
+std::ifstream FileIO::openFile(const std::string& filename) {
     std::ifstream file(filename);
 
     if (!file.is_open()) {
         throw FileOpenError(filename);
     }
     return file;
-}
-
-
-
-
-// JSONParser.cpp
-void JSONParser::parse(std::ifstream& file, TodoList& todoList) {
-    nlohmann::json jsonData;
-    file >> jsonData;
-
-    parseProjects(jsonData.dump(), todoList);
-}
-
-void JSONParser::parseProjects(const nlohmann::json& jsonProjects, TodoList& todoList) {
-    for (const auto& [projectName, jsonProject] : jsonProjects.items()) {
-
-        Project& project = todoList.newProject(projectName);
-
-        if (jsonProject.is_object()) {
-            parseTasks(jsonProject, project);
-        }
-    }
-}
-
-void JSONParser::parseTasks(const nlohmann::json& jsonTasks, Project& project) {
-    for (const auto& [taskName, jsonTask] : jsonTasks.items()) {
-
-        Task task(taskName);
-
-        if (jsonTask.is_object()) {
-            parseTaskAttributes(jsonTask, task);
-        }
-
-        project.addTask(task);
-    }
-}
-
-void JSONParser::parseTaskAttributes(const nlohmann::json& jsonTask, Task& task) {
-    if (jsonTask.contains("completed")) {
-        task.setComplete(jsonTask["completed"].get<bool>());
-    }
-    if (jsonTask.contains("due")) {
-        task.setDueDate(jsonTask["due"].get<std::string>());
-    }
-    if (jsonTask.contains("tags")) {
-        for (const auto& tag : jsonTask["tags"]) {
-            task.addTag(tag.get<std::string>());
-        }
-    }
 }

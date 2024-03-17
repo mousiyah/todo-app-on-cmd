@@ -16,6 +16,7 @@
 //
 // Example:
 //  Project p{"projectIdent"};
+
 Project::Project(std::string ident) : ident(std::move(ident)) {};
 
 // TODO Write a function, size, that takes no parameters and returns an unsigned
@@ -24,6 +25,7 @@ Project::Project(std::string ident) : ident(std::move(ident)) {};
 // Example:
 //  Project p{"projectIdent"};
 //  auto size = p.size();
+
 unsigned int Project::size() const noexcept {
     return tasks.size();
 }
@@ -33,6 +35,7 @@ unsigned int Project::size() const noexcept {
 // Example:
 //  Project pObj{"projectIdent"};
 //  auto ident = pObj.getIdent();
+
 const std::string& Project::getIdent() const noexcept {
     return ident;
 }
@@ -43,6 +46,7 @@ const std::string& Project::getIdent() const noexcept {
 // Example:
 //  Project pObj{"projectIdent"};
 //  pObj.setIdent("projectIdent2");
+
 void Project::setIdent(std::string pIdent) noexcept {
     ident = std::move(pIdent);
 }
@@ -181,10 +185,13 @@ std::string Project::str() const {
     return json().dump();
 }
 
-// TODO
-nlohmann::json Project::json() const {
-    nlohmann::json json_data;
-    json_data["ident"] = ident;
-    json_data["tasks"] = tasks;
-    return json_data;
+void Project::parse(const nlohmann::json& json) {
+    for (const auto& [tIdent, jsonTask] : json.items()) {
+
+        Task& task = newTask(tIdent);
+
+        if (jsonTask.is_object()) {
+            task.parse(jsonTask);
+        }
+    }
 }

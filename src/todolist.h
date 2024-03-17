@@ -48,6 +48,8 @@ class TodoList {
 
         void load(const std::string& filename);
 
+        void parse(const nlohmann::json& json);
+
         void save(const std::string& filename);
 
         friend bool operator==(const TodoList& todoList1, const TodoList& todoList2);
@@ -74,7 +76,7 @@ struct NoProjectError : public std::out_of_range {
 
 struct FileOpenError : public std::runtime_error {
     explicit FileOpenError(const std::string &filename)
-        : std::runtime_error("Failed to open file: " + filename) {}
+        : std::runtime_error("Failed to open file: " + filename + "'") {}
 
     ~FileOpenError() override = default;
 };
@@ -82,24 +84,6 @@ struct FileOpenError : public std::runtime_error {
 
 
 #endif // TODOLIST_H
-
-
-
-
-
-#ifndef JSONPARSER_H
-#define JSONPARSER_H
-
-class JSONParser {
-public:
-    static void parse(std::ifstream& file, TodoList& todoList);
-private:
-    static void parseProjects(const nlohmann::json& jsonProjects, TodoList& todoList);
-    static void parseTasks(const nlohmann::json& jsonTasks, Project& project);
-    static void parseTaskAttributes(const nlohmann::json& jsonTask, Task& task);
-};
-
-#endif // JSONPARSER_H
 
 
 
@@ -114,7 +98,7 @@ private:
 
 class FileIO {
 public:
-    static std::ifstream& openFile(const std::string& filename);
+    static std::ifstream openFile(const std::string& filename);
 
 private:
     
