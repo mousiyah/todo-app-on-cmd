@@ -36,8 +36,8 @@ const std::string& Task::getIdent() const noexcept {
 //  Task tObj{"Task Name"};
 //  auto ident = tObj.setIdent("New Task Name");
 
-void Task::setIdent(std::string ident) noexcept {
-    ident = std::move(ident);
+void Task::setIdent(std::string tIdent) noexcept {
+    ident = std::move(tIdent);
 }
 
 // TODO Write a function, addTag, that takes one parameters, a tag
@@ -49,12 +49,19 @@ void Task::setIdent(std::string ident) noexcept {
 //  tObj.addTag("tag");
 
 bool Task::addTag(const std::string& tag) {
-    if (containsTag(tag)) {
+    auto it = findTag(tag);
+
+    if (it != tags.end()) {
         return false;
-    } else {
-        tags.emplace(tag);
-        return true;
     }
+
+    try {
+        tags.push_back(std::move(tag));
+    } catch (const std::exception& e) {
+        throw e;
+    }
+
+    return true;
 }
 
 // TODO Write a function, deleteTag, that takes one parameter, a tag
@@ -67,13 +74,18 @@ bool Task::addTag(const std::string& tag) {
 //  tObj.addTag("tag");
 //  tObj.deleteTag("tag");
 
-bool Task::deleteTag(const std::string& tag){
-    if(!containsTag(tag)) {
+bool Task::deleteTag(const std::string& tag) {
+    auto it = findTag(tag);
+    if (it == tags.end()) {
         throw NoTagError(tag);
-    } else {
-        tags.erase(tag);
-        return true;
     }
+
+    try {
+        tags.erase(it);
+    } catch (const std::exception& e) {
+        throw e;
+    }
+    return true;
 }
 
 // TODO Write a function, numTags, that takes no parameters and returns an
@@ -96,7 +108,11 @@ unsigned int Task::numTags() const noexcept {
 //  tObj.findTag("tag");
 
 bool Task::containsTag(const std::string& tag) const noexcept{
-    return tags.find(tag) != tags.end();
+    return findTag(tag) != tags.end();
+}
+
+TagContainer::const_iterator Task::findTag(const std::string &tag) const noexcept {
+    return std::find(tags.begin(), tags.end(), tag);
 }
 
 // TODO Write a function, getDueDate, that returns the due date for the Task.
@@ -156,12 +172,29 @@ bool Task::isComplete() const noexcept {
 //   ...
 //  }
 
-bool operator==(const Task& task1, const Task& task2) noexcept {
+bool operator==(const Task& task1, const Task& task2) noexcept{
     return task1.ident == task2.ident &&
            task1.dueDate == task2.dueDate &&
            task1.complete == task2.complete &&
            task1.tags == task2.tags;
 }
+
+//  - Merge two tasks
+//  - the tags should be merged
+//  - completed status overwritten by the task being added
+//  - dueDate overwritten by the task being added
+void Task::mergeTask(const Task& newTask) noexcept{
+
+    for (const auto& tag : newTask.tags) {
+        if (!containsTag(tag)) {
+            addTag(tag);
+        }
+    }
+
+    complete = newTask.complete;
+    dueDate = newTask.dueDate;
+}
+
 
 // TODO Write a function, str, that takes no parameters and returns a
 //  std::string of the JSON representation of the data in the Item.
@@ -173,26 +206,32 @@ bool operator==(const Task& task1, const Task& task2) noexcept {
 //  std::string s = iObj.str();
 
 std::string Task::str() const {
-    nlohmann::json taskJson;
-    taskJson["identifier"] = ident;
-    taskJson["due_date"] = dueDate.str();
-    taskJson["complete"] = complete;
+    return json().dump();
+}
+
+nlohmann::json Task::json() const {
+    nlohmann::json jsonTask;
+    
+    jsonTask["dueDate"] = dueDate.str();
+    jsonTask["completed"] = complete;
 
     nlohmann::json tagsJson;
     for (const auto& tag : tags) {
         tagsJson.push_back(tag);
     }
-    taskJson["tags"] = tagsJson;
+    jsonTask["tags"] = tagsJson;
 
-    return taskJson.dump();
+    return jsonTask;
 }
 
 void Task::parse(const nlohmann::json& json) {
     if (json.contains("completed")) {
         setComplete(json["completed"].get<bool>());
     }
-    if (json.contains("due")) {
-        setDueDate(json["due"].get<std::string>());
+    if (json.contains("dueDate")) {
+        Date* date = new Date();
+        date->setDateFromString(json["dueDate"].get<std::string>());
+        setDueDate(*date);
     }
     if (json.contains("tags")) {
         for (const auto& tag : json["tags"]) {

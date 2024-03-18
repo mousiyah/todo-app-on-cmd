@@ -14,58 +14,46 @@
 #ifndef TODOLIST_H
 #define TODOLIST_H
 
-#include <string>
-#include <unordered_map>
-
 #include "project.h"
 
-using ProjectContainer = std::unordered_map<std::string, Project>;
+using ProjectContainer = std::vector<Project>;
 
 class TodoList {
 
-    private:
-        ProjectContainer projects;
+private:
+  ProjectContainer projects;
         
-    public:
-        explicit TodoList();
-        ~TodoList() = default;
+public:
+  explicit TodoList();
+  ~TodoList() = default;
 
-        unsigned int size() const noexcept;
+  unsigned int size() const noexcept;
 
-        const ProjectContainer &getProjects() const noexcept;
+  const ProjectContainer &getProjects() const noexcept;
+  Project& newProject(const std::string& ident);
+  bool containsProject(const std::string& ident) noexcept;
+  ProjectContainer::iterator findProject(const std::string &ident) noexcept;
 
-        Project& TodoList::newProject(const std::string& ident);
+  bool addProject(const Project& project);
+  void mergeProjects(const Project& oldProject, const Project& newProject);
+  Project& getProject(const std::string& ident);
+  bool deleteProject(const std::string& ident);
 
-        bool TodoList::containsProject(const std::string& ident);
+  void load(const std::string& filename);
 
-        bool addProject(const Project& project);
+  void parse(const nlohmann::json& json);
 
-        void mergeProjects(const Project& oldProject, const Project& newProject);
+  void save(const std::string& filename);
 
-        Project& getProject(const std::string& ident);
+  friend bool operator==(const TodoList& todoList1, const TodoList& todoList2);
 
-        bool deleteProject(const std::string& ident);
-
-        void load(const std::string& filename);
-
-        void parse(const nlohmann::json& json);
-
-        void save(const std::string& filename);
-
-        friend bool operator==(const TodoList& todoList1, const TodoList& todoList2);
-
-        std::string str() const;
+  std::string str() const;
+  
+  nlohmann::json json() const;
 
 };
 
 
-
-struct AddProjectError : public std::runtime_error {
-  explicit AddProjectError(const std::string &ident)
-      : std::runtime_error("could not add project with identifier '" + ident + "'") {}
-
-  ~AddProjectError() override = default;
-};
 
 struct NoProjectError : public std::out_of_range {
   explicit NoProjectError(const std::string &ident)
@@ -76,7 +64,7 @@ struct NoProjectError : public std::out_of_range {
 
 struct FileOpenError : public std::runtime_error {
     explicit FileOpenError(const std::string &filename)
-        : std::runtime_error("Failed to open file: " + filename + "'") {}
+        : std::runtime_error("failed to open file with name " + filename + "'") {}
 
     ~FileOpenError() override = default;
 };
@@ -84,24 +72,3 @@ struct FileOpenError : public std::runtime_error {
 
 
 #endif // TODOLIST_H
-
-
-
-
-
-#ifndef FILE_IO_H
-#define FILE_IO_H
-
-#include <fstream>
-#include <string>
-#include <stdexcept>
-
-class FileIO {
-public:
-    static std::ifstream openFile(const std::string& filename);
-
-private:
-    
-};
-
-#endif // FILE_IO_H

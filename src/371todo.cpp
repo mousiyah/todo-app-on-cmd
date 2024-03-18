@@ -48,7 +48,7 @@ int App::run(int argc, char *argv[]) {
   TodoList tlObj{};
 
   // Only uncomment this once you have implemented the load function!
-  // tlObj.load(db);
+  tlObj.load(db);
 
   const Action a = parseActionArgument(args);
   switch (a) {
@@ -176,7 +176,7 @@ App::Action App::parseActionArgument(cxxopts::ParseResult &args) {
 std::string App::getJSON(TodoList &tlObj) {
   return "{}";
   // Only uncomment this once you have implemented the functions used!
-  // return tlObj.str();
+  return tlObj.str();
 }
 
 // TODO Write a function, getJSON, that returns a std::string containing the
@@ -194,8 +194,8 @@ std::string App::getJSON(TodoList &tlObj) {
 std::string App::getJSON(TodoList &tlObj, const std::string &p) {
   return "{}";
   // Only uncomment this once you have implemented the functions used!
-  // auto pObj = tlObj.getProject(p);
-  // return pObj.str();
+  auto pObj = tlObj.getProject(p);
+  return pObj.str();
 }
 
 // TODO Write a function, getJSON, that returns a std::string containing the
@@ -215,9 +215,9 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
                          const std::string &t) {
   return "{}";
   // Only uncomment this once you have implemented the functions used!
-  // auto pObj = tlObj.getProject(p);
-  // const auto tObj = pObj.getTask(t);
-  // return tObj.str();
+  auto pObj = tlObj.getProject(p);
+  const auto tObj = pObj.getTask(t);
+  return tObj.str();
 }
 
 // DONE Write a function, getJSON, that returns a std::string containing the
@@ -239,11 +239,11 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
                          const std::string &task, const std::string &tag) {
   return "{}";
   // Only uncomment this once you have implemented the functions used!
-  // auto pObj = tlObj.getProject(p);
-  // const auto tObj = pObj.getTask(task);
-  // if (tObj.containsTag(tag)) {
-  //   return tag;
-  // } else {
-  //   return "";
-  // }
+  auto pObj = tlObj.getProject(p);
+  const auto tObj = pObj.getTask(task);
+  if (tObj.containsTag(tag)) {
+    return tag;
+  } else {
+    return "";
+  }
 }

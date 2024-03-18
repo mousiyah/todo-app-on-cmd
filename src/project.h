@@ -13,14 +13,11 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-#include <string>
-#include <map>
-
 #include "lib_json.hpp"
 
 #include "task.h"
 
-using TaskContainer = std::map<std::string, Project>;
+using TaskContainer = std::vector<Task>;
 
 class Project {
   
@@ -39,30 +36,41 @@ public:
 
   const TaskContainer &getTasks() const noexcept;
   Task &newTask(const std::string &tIdent);
-  TaskContainer::iterator findTask(const std::string &tIdent);
-  bool containsTask(const std::string &tIdent) const noexcept;
+  TaskContainer::iterator findTask(const std::string &tIdent) noexcept;
+  bool containsTask(const std::string &tIdent) noexcept;
 
   bool addTask(Task task);
-  void mergeTasks(const Task& oldTask, const Task& newTask);
   Task &getTask(const std::string &tIdent);
   bool deleteTask(const std::string &tIdent);
 
-  friend bool operator==(const Project& project1, const Project& project2);
+  friend bool operator==(const Project& project1, const Project& project2) noexcept;
+  
+  void mergeProjects(const Project& newProject) noexcept;
 
   nlohmann::json json() const;
   std::string str() const;
   void parse(const nlohmann::json& json);
 
+  // Wrappers for iterating over the nested container
+  inline TaskContainer::iterator begin() { return tasks.begin(); }
+  inline TaskContainer::const_iterator cbegin() const { return tasks.cbegin(); }
+
+  inline TaskContainer::iterator end() { return tasks.end(); }
+  inline TaskContainer::const_iterator cend() const { return tasks.cend(); }
+
+  inline TaskContainer::reverse_iterator rbegin() { return tasks.rbegin(); }
+  inline TaskContainer::const_reverse_iterator crbegin() const {
+    return tasks.crbegin();
+  }
+
+  inline TaskContainer::reverse_iterator rend() { return tasks.rend(); }
+  inline TaskContainer::const_reverse_iterator crend() const {
+    return tasks.crend();
+  }
+
 };
 
 
-
-struct AddTaskError : public std::runtime_error {
-  explicit AddTaskError(const std::string &tIdent)
-      : std::runtime_error("could not add task with identifier '" + tIdent + "'") {}
-
-  ~AddTaskError() override = default;
-};
 
 struct NoTaskError : public std::out_of_range {
   explicit NoTaskError(const std::string &tIdent)

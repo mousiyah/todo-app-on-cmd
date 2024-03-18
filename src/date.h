@@ -22,12 +22,44 @@
 #include "lib_json.hpp"
 
 class Date {
+  
 private:
   unsigned int year, month, day;
-  bool initialized;
+  bool initialised;
 
 public:
-  Date();
+  explicit Date();
+  ~Date() = default;
+
+  void setDateFromString(const std::string& dateString);
+
+  bool isValidDate(unsigned int year, unsigned int month, unsigned int day) const;
+
+  bool isInitialised() const noexcept;
+  void setUninitialised() noexcept;
+
+  std::string str() const;
+
+  void setDate(unsigned int year, unsigned int month, unsigned int day) noexcept;
+
+  unsigned int getYear() const noexcept;
+  unsigned int getMonth() const noexcept;
+  unsigned int getDay() const noexcept;
+
+  friend bool operator==(const Date& date1, const Date& date2) noexcept;
+  friend bool operator<(const Date& date1, const Date& date2) noexcept;
+
 };
+
+
+
+struct InvalidDateError : public std::runtime_error {
+  explicit InvalidDateError(const std::string &date)
+      : std::runtime_error("Invalid Date format '" + date + "'") {}
+
+  ~InvalidDateError() override = default;
+};
+
+
 
 #endif // DATE_H

@@ -7,8 +7,6 @@
 // Canvas: https://canvas.swansea.ac.uk/courses/44636
 // -----------------------------------------------------
 
-#include <string>
-
 #include "project.h"
 
 // TODO Write a constructor that takes one parameter, a string identifier and
@@ -61,22 +59,26 @@ void Project::setIdent(std::string pIdent) noexcept {
 //  Project pObj{"projectIdent"};
 //  pObj.newTask("newTaskName");
 
-Task& Project::newTask(const std::string& tIdent) {
-    if (containsTask(tIdent)) {
-        return tasks[ident];
-    } else {
-        auto [it, success] = tasks.emplace(ident, Task(ident));
-
-        if (!success) {
-            throw AddTaskError(tIdent);
-        } else {
-            return it->second;
-        }
+Task &Project::newTask(const std::string &tIdent) {
+    auto it = findTask(tIdent);
+    if (it != tasks.end()) {
+        return *it;
     }
+    try {
+        tasks.emplace_back(tIdent);
+    } catch (const std::exception& e) {
+        throw e;
+    }
+    return tasks.back();
 }
 
-bool Project::containsTask(const std::string& tIdent) const noexcept {
-    return tasks.find(tIdent) != tasks.end();
+bool Project::containsTask(const std::string &tIdent) noexcept{
+    return findTask(tIdent) != tasks.end();
+}
+
+TaskContainer::iterator Project::findTask(const std::string &tIdent) noexcept{
+    return std::find_if(tasks.begin(), tasks.end(),
+                        [&tIdent](const Task &task) { return task.getIdent() == tIdent; });
 }
 
 const TaskContainer& Project::getTasks() const noexcept {
@@ -97,25 +99,20 @@ const TaskContainer& Project::getTasks() const noexcept {
 //  pObj.addItem(tObj);
 
 bool Project::addTask(Task task) {
-    std::string tIdent = task.getIdent();
+   auto it = findTask(task.getIdent());
 
-    if (containsTask(tIdent)) {
-        mergeTasks(tasks[tIdent], task);
+    if (it != tasks.end()) {
+        it->mergeTask(task);
         return false;
-    } else {
-        auto [it, success] = tasks.emplace(tIdent, task);
-
-        if (!success) {
-            throw AddTaskError(tIdent);
-        } else {
-            return true;
-        }
     }
-}
 
-// TODO
-void Project::mergeTasks(const Task& oldTask, const Task& newTask) {
+    try {
+        tasks.push_back(std::move(task));
+    } catch (const std::exception& e) {
+        throw e;
+    }
 
+    return true;
 }
 
 // TODO Write a function, getTask, that takes one parameter, a Task identifier
@@ -130,12 +127,12 @@ void Project::mergeTasks(const Task& oldTask, const Task& newTask) {
 //  pObj.newTask("newTaskName");
 //  auto tObj = pObj.getTask("newTaskName");
 
-Task& Project::getTask(const std::string& tIdent) {
-    if (!containsTask(tIdent)) {
+Task &Project::getTask(const std::string &tIdent) {
+    auto it = findTask(tIdent);
+    if (it == tasks.end()) {
         throw NoTaskError(tIdent);
-    } else {
-        return tasks[tIdent];
     }
+    return *it;
 }
 
 // TODO Write a function, deleteTask, that takes one parameter, a Task
@@ -147,13 +144,19 @@ Task& Project::getTask(const std::string& tIdent) {
 //  pObj.newTask("newTaskName");
 //  bool result = pObj.deleteTask("newTaskName");
 
-bool Project::deleteTask(const std::string& tIdent) {
-    if (!containsTask(tIdent)) {
+bool Project::deleteTask(const std::string &tIdent) {
+    auto it = findTask(tIdent);
+    if (it == tasks.end()) {
         throw NoTaskError(tIdent);
-    } else {
-        auto it = tasks.find(tIdent);
-        tasks.erase(it);
     }
+
+    try {
+        tasks.erase(it);
+    } catch (const std::exception& e) {
+        throw e;
+    }
+
+    return true;
 }
 
 // TODO Write an == operator overload for the Project class, such that two
@@ -168,8 +171,15 @@ bool Project::deleteTask(const std::string& tIdent) {
 //    ...
 //  }
 
-bool operator==(const Project& project1, const Project& project2) {
+bool operator==(const Project& project1, const Project& project2) noexcept {
     return project1.ident == project2.ident && project1.tasks == project2.tasks;
+}
+
+// Merge projects
+void Project::mergeProjects(const Project& newProject) noexcept{
+    for (const Task& task : newProject.getTasks()) {
+        addTask(task);
+    }
 }
 
 // TODO Write a function, str, that takes no parameters and returns a
@@ -185,8 +195,21 @@ std::string Project::str() const {
     return json().dump();
 }
 
+nlohmann::json Project::json() const {
+    nlohmann::json jsonProject;
+
+        for (const auto& task : tasks) {
+            jsonProject[task.getIdent()] = task.json();
+        }
+        
+        return jsonProject;
+}
+
 void Project::parse(const nlohmann::json& json) {
-    for (const auto& [tIdent, jsonTask] : json.items()) {
+    for (auto it : json.items()) {
+
+        const std::string& tIdent = it.key();
+        const nlohmann::json& jsonTask = it.value();
 
         Task& task = newTask(tIdent);
 

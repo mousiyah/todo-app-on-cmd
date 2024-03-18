@@ -16,47 +16,46 @@
 #ifndef TASK_H
 #define TASK_H
 
-#include <string>
-#include <unordered_set>
-
 #include "date.h"
 
-using TagContainer = std::unordered_set<std::string>;
+using TagContainer = std::vector<std::string>;
 
 class Task {
 
-    private:
-        std::string ident;
-        Date dueDate;
-        bool complete = false;
-        TagContainer tags;
+private:
+  std::string ident;
+  Date dueDate;
+  bool complete = false;
+  TagContainer tags;
 
-    public:
-        explicit Task(std::string ident);
-        ~Task() = default;
+public:
+  explicit Task(std::string ident);
+  ~Task() = default;
 
-        const std::string& getIdent() const noexcept;
-        void Task::setIdent(std::string ident) noexcept;
+  const std::string& getIdent() const noexcept;
+  void setIdent(std::string tIdent) noexcept;
 
-        bool addTag(const std::string& tag);
-        bool deleteTag(const std::string& tag);
-        unsigned int numTags() const noexcept;
-        bool containsTag(const std::string& tag) const noexcept;
+  bool addTag(const std::string& tag);
+  bool deleteTag(const std::string& tag);
+  unsigned int numTags() const noexcept;
+  bool containsTag(const std::string& tag) const noexcept;
+  TagContainer::const_iterator findTag(const std::string &tag) const noexcept;
 
-        Date getDueDate() const noexcept;
-        void setDueDate(const Date& dueDate) noexcept;
+  Date getDueDate() const noexcept;
+  void setDueDate(const Date& dueDate) noexcept;
 
-        void setComplete(bool complete) noexcept;
-        bool isComplete() const noexcept;
+  void setComplete(bool complete) noexcept;
+  bool isComplete() const noexcept;
 
-        friend bool operator==(const Task& task1, const Task& task2) noexcept;
+  friend bool operator==(const Task& task1, const Task& task2) noexcept;
 
-        std::string str() const;
+  void mergeTask(const Task& newTask) noexcept;
 
-        void parse(const nlohmann::json& json);
+  std::string str() const;
+  nlohmann::json json() const;
+  void parse(const nlohmann::json& json);
 
 };
-
 
 
 struct NoTagError : public std::out_of_range {
@@ -65,7 +64,6 @@ struct NoTagError : public std::out_of_range {
 
   ~NoTagError() override = default;
 };
-
 
 
 #endif // TASK_H

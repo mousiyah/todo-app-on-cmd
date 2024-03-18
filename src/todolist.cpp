@@ -6,7 +6,7 @@
 //
 // Canvas: https://canvas.swansea.ac.uk/courses/44636
 // -----------------------------------------------------
-#include <string>
+
 #include <fstream>
 
 #include "todolist.h"
@@ -46,22 +46,29 @@ const ProjectContainer& TodoList::getProjects() const noexcept {
 
 Project& TodoList::newProject(const std::string& ident) {
 
-    if (containsProject(ident)) {
-        return projects[ident];
-    } else {
-        auto [it, success] = projects.emplace(ident, Project(ident));
-
-        if (!success) {
-            throw AddProjectError(ident);
-        } else {
-            return it->second;
-        }
+    auto it = findProject(ident);
+    if (it != projects.end()) {
+        return *it;
     }
+    try {
+        projects.emplace_back(ident);
+    } catch (const std::exception& e) {
+        throw e;
+    }
+    return projects.back();
+
 }
 
-bool TodoList::containsProject(const std::string& ident) {
-    return projects.find(ident) != projects.end();
+bool TodoList::containsProject(const std::string& ident) noexcept {
+    return findProject(ident) != projects.end();
 }
+
+ProjectContainer::iterator TodoList::findProject(const std::string &ident) noexcept {
+    return std::find_if(projects.begin(), projects.end(),
+                        [&ident](const Project &project) { return project.getIdent() == ident; });
+}
+
+
 
 // TODO Write a function, addProject, that takes one parameter, a Project
 //  object, and returns true if the object was successfully inserted. If an
@@ -77,25 +84,20 @@ bool TodoList::containsProject(const std::string& ident) {
 
 bool TodoList::addProject(const Project& project) {
 
-    std::string ident = project.getIdent();
+    auto it = findProject(project.getIdent());
 
-    if (containsProject(ident)) {
-        mergeProjects(projects[ident], project);
+    if (it != projects.end()) {
+        it->mergeProjects(project);
         return false;
-    } else {
-        auto [it, success] = projects.emplace(ident, project);
-
-        if (!success) {
-            throw AddProjectError(ident);
-        } else {
-            return true;
-        }
     }
-}
 
-// TODO
-void TodoList::mergeProjects(const Project& oldProject, const Project& newProject) {
+    try {
+        projects.push_back(std::move(project));
+    } catch (const std::exception& e) {
+        throw e;
+    }
 
+    return true;
 }
 
 // TODO Write a function, getProject, that takes one parameter, a Project
@@ -108,13 +110,11 @@ void TodoList::mergeProjects(const Project& oldProject, const Project& newProjec
 //  auto cObj = tObj.getProject("projectIdent");
 
 Project& TodoList::getProject(const std::string& ident) {
-    
-    if(containsProject(ident)) {
-        return projects[ident];
-    } else {
+    auto it = findProject(ident);
+    if (it == projects.end()) {
         throw NoProjectError(ident);
     }
-
+    return *it;
 }
 
 // TODO Write a function, deleteProject, that takes one parameter, a Project
@@ -128,12 +128,18 @@ Project& TodoList::getProject(const std::string& ident) {
 
 bool TodoList::deleteProject(const std::string& ident) {
 
-    if(containsProject(ident)) {
-        auto erased = projects.erase(ident);
-        return erased > 0;
-    } else {
+    auto it = findProject(ident);
+    if (it == projects.end()) {
         throw NoProjectError(ident);
     }
+
+    try {
+        projects.erase(it);
+    } catch (const std::exception& e) {
+        throw e;
+    }
+
+    return true;
     
 }
 
@@ -208,17 +214,25 @@ bool TodoList::deleteProject(const std::string& ident) {
 
 void TodoList::load(const std::string& filename) {
 
-    auto file = FileIO::openFile(filename);
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        throw FileOpenError(filename);
+    }
 
     nlohmann::json jsonData;
     file >> jsonData;
 
     parse(jsonData);
     
+    file.close();
 }
 
 void TodoList::parse(const nlohmann::json& json) {
-    for (const auto& [pIdent, jsonProject] : json.items()) {
+    for (auto it : json.items()) {
+        
+        const std::string& pIdent = it.key();
+        const nlohmann::json& jsonProject = it.value();
 
         Project& project = newProject(pIdent);
 
@@ -241,6 +255,15 @@ void TodoList::parse(const nlohmann::json& json) {
 
 void TodoList::save(const std::string& filename) {
     // TODO: Implement saving to JSON file
+    std::ofstream file(filename);
+
+    if (!file.is_open()) {
+        throw FileOpenError(filename);
+    }
+    
+    file << json().dump(); // 2 for identation
+
+    file.close();
 }
 
 // TODO Write an == operator overload for the TodoList class, such that two
@@ -269,19 +292,15 @@ bool operator==(const TodoList& todoList1, const TodoList& todoList2) {
 
 std::string TodoList::str() const {
     // TODO: Implement converting TodoList to JSON string
-    return "";
+    return json().dump();
 }
 
-
-
-
-
-// FileIO.cpp
-std::ifstream FileIO::openFile(const std::string& filename) {
-    std::ifstream file(filename);
-
-    if (!file.is_open()) {
-        throw FileOpenError(filename);
-    }
-    return file;
+nlohmann::json TodoList::json() const {
+    nlohmann::json jsonTodoList;
+        
+        for (const auto& project : projects) {
+            jsonTodoList[project.getIdent()] = project.json();
+        }
+        
+        return jsonTodoList;
 }
