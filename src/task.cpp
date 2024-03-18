@@ -100,6 +100,16 @@ bool Task::deleteTag(const std::string& tag) {
     return true;
 }
 
+bool Task::deleteTags(const TagContainer& tagsToDelete) {
+    bool allTagsDeleted = true;
+    for (const auto& tag : tagsToDelete) {
+        if (!deleteTag(tag)) {
+            allTagsDeleted = false;
+        }
+    }
+    return allTagsDeleted;
+}
+
 // TODO Write a function, numTags, that takes no parameters and returns an
 // unsigned int of the number of tags in the Task contains.
 //

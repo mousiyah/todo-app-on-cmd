@@ -42,6 +42,8 @@ const std::string STUDENT_NUMBER = "2130288";
 // program argument.
 enum Action { CREATE, JSON, DELETE, UPDATE };
 
+enum Argument { PROJECT, TASK, TAG, DUE, COMPLETED, INCOMPLETE};
+
 int run(int argc, char *argv[]);
 
 cxxopts::Options cxxoptsSetup();
@@ -55,7 +57,8 @@ std::string getJSON(TodoList &tl, const std::string &p, const std::string &task,
                     const std::string &tag);
 
 
-void createAction(cxxopts::ParseResult &args, TodoList &tlObj);
+void createAction(TodoList &tlObj, cxxopts::ParseResult &args);
+void deleteAction(TodoList &tlObj, cxxopts::ParseResult &args);
 
 
 } // namespace App

@@ -53,7 +53,7 @@ int App::run(int argc, char *argv[]) {
   const Action a = parseActionArgument(args);
   switch (a) {
     case Action::CREATE:
-      createAction(args, tlObj);
+      createAction(tlObj, args);
       break;
 
     case Action::JSON:
@@ -65,7 +65,7 @@ int App::run(int argc, char *argv[]) {
       break;
 
     case Action::DELETE:
-      throw std::runtime_error("delete not implemented");
+      deleteAction(tlObj, args);
       break;
 
     default:
@@ -250,7 +250,7 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
   }
 }
 
-void App::createAction(cxxopts::ParseResult &args, TodoList &tlObj) {
+void App::createAction(TodoList &tlObj, cxxopts::ParseResult &args) {
   
   std::string project = args.count("project") ? args["project"].as<std::string>() : "";
   std::string task = args.count("task") ? args["task"].as<std::string>() : "";
@@ -302,6 +302,53 @@ void App::createAction(cxxopts::ParseResult &args, TodoList &tlObj) {
         task.empty() && !project.empty()) {
 
     tlObj.newProject(project);
+  }
+
+}
+
+void App::deleteAction(TodoList &tlObj, cxxopts::ParseResult &args) {
+  
+  std::string project = args.count("project") ? args["project"].as<std::string>() : "";
+  std::string task = args.count("task") ? args["task"].as<std::string>() : "";
+  std::string tag = args.count("tag") ? args["tag"].as<std::string>() : "";
+  std::string due = args.count("due") ? args["due"].as<std::string>() : "";
+
+  if (project.empty()) {
+      std::cerr << "Error: missing project, task, tag, due, completed/incomplete argument(s)." << std::endl;
+        exit(1);
+  }
+
+  if(args.count("due") && !task.empty() && !project.empty()) {
+    try {
+      tlObj.getProject(project).getTask(task).getDueDate().setUninitialised();
+    } catch (const std::exception& e){
+      std::cerr << e.what() << std::endl;
+        exit(1);
+    }
+  }
+
+  if(!tag.empty() && !task.empty() && !project.empty()) {
+    TagContainer tags;
+
+    std::istringstream iss(tag);
+    std::string token;
+    while (std::getline(iss, token, ',')) {
+        tags.push_back(token);
+    }
+
+    tlObj.getProject(project).getTask(task).deleteTags(tags);
+  }
+
+  if (!args.count("due") && tag.empty() &&
+        !task.empty() && !project.empty()) {
+
+    tlObj.getProject(project).deleteTask(task);
+  }
+
+  if (!args.count("due") && tag.empty() &&
+        task.empty() && !project.empty()) {
+
+    tlObj.deleteProject(project);
   }
 
 }

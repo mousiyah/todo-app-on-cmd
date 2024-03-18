@@ -38,6 +38,7 @@ public:
   bool addTag(const std::string& tag);
   bool addTags(const TagContainer& newTags);
   bool deleteTag(const std::string& tag);
+  bool deleteTags(const TagContainer& newTags);
   unsigned int numTags() const noexcept;
   bool containsTag(const std::string& tag) const noexcept;
   TagContainer::const_iterator findTag(const std::string &tag) const noexcept;
