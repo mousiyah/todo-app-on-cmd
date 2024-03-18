@@ -53,7 +53,7 @@ int App::run(int argc, char *argv[]) {
   const Action a = parseActionArgument(args);
   switch (a) {
     case Action::CREATE:
-      throw std::runtime_error("create not implemented");
+      createAction(args, tlObj);
       break;
 
     case Action::JSON:
@@ -246,4 +246,25 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
   } else {
     return "";
   }
+}
+
+void App::createAction(cxxopts::ParseResult &args, TodoList &tlObj) {
+  std::string project = args["project"].as<std::string>();
+  std::string task = args["task"].as<std::string>();
+  std::string tag = args["tag"].as<std::string>();
+  std::string due = args["due"].as<std::string>();
+
+  bool completed = args.count("completed") > 0;
+  bool incomplete = args.count("incomplete") > 0;
+
+  if (project.empty()) {
+      throw MissingArguments();
+  }
+
+  if (completed && incomplete) {
+      throw CompleteArgumentClash();
+  }
+
+
+
 }

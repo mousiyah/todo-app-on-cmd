@@ -40,9 +40,6 @@ public:
   bool deleteProject(const std::string& ident);
 
   void load(const std::string& filename);
-
-  void parse(const nlohmann::json& json);
-
   void save(const std::string& filename);
 
   friend bool operator==(const TodoList& todoList1, const TodoList& todoList2);
@@ -50,6 +47,9 @@ public:
   std::string str() const;
   
   nlohmann::json json() const;
+  
+  void parse(const nlohmann::json& json);
+ 
 
 };
 

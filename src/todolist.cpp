@@ -228,21 +228,6 @@ void TodoList::load(const std::string& filename) {
     file.close();
 }
 
-void TodoList::parse(const nlohmann::json& json) {
-    for (auto it : json.items()) {
-        
-        const std::string& pIdent = it.key();
-        const nlohmann::json& jsonProject = it.value();
-
-        Project& project = newProject(pIdent);
-
-        if (jsonProject.is_object()) {
-            project.parse(jsonProject);
-        }
-    }
-}
-
-
 // TODO Write a function, save, that takes one parameter, the path of the file
 //  to write the database to. The function should serialise the TodoList object
 //  as JSON.
@@ -295,6 +280,7 @@ std::string TodoList::str() const {
     return json().dump();
 }
 
+// Convert TodoList to json object and return it
 nlohmann::json TodoList::json() const {
     nlohmann::json jsonTodoList;
         
@@ -303,4 +289,19 @@ nlohmann::json TodoList::json() const {
         }
         
         return jsonTodoList;
+}
+
+// Parse and initialize TodoList from provided json object
+void TodoList::parse(const nlohmann::json& json) {
+    for (auto it : json.items()) {
+        
+        const std::string& pIdent = it.key();
+        const nlohmann::json& jsonProject = it.value();
+
+        Project& project = newProject(pIdent);
+
+        if (jsonProject.is_object()) {
+            project.parse(jsonProject);
+        }
+    }
 }
