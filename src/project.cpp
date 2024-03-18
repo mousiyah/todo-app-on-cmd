@@ -15,7 +15,7 @@
 // Example:
 //  Project p{"projectIdent"};
 
-Project::Project(std::string ident) : ident(std::move(ident)) {};
+Project::Project(const std::string& pIdent) : ident(pIdent) {};
 
 // TODO Write a function, size, that takes no parameters and returns an unsigned
 // int of the number of Tasks in the Project contains.
@@ -65,7 +65,8 @@ Task &Project::newTask(const std::string &tIdent) {
         return *it;
     }
     try {
-        tasks.emplace_back(tIdent);
+        Task* task = new Task(tIdent);
+        tasks.push_back(std::move(*task));
     } catch (const std::exception& e) {
         throw e;
     }

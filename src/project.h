@@ -26,7 +26,7 @@ private:
   TaskContainer tasks;
 
 public:
-  explicit Project(std::string ident);
+  explicit Project(const std::string& ident);
   ~Project() = default;
 
   unsigned int size() const noexcept;

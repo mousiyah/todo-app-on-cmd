@@ -71,6 +71,8 @@ int App::run(int argc, char *argv[]) {
     default:
       throw std::runtime_error("unknown action not implemented");
   }
+  
+  tlObj.save(db);
 
   return 0;
 }
@@ -249,22 +251,57 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
 }
 
 void App::createAction(cxxopts::ParseResult &args, TodoList &tlObj) {
-  std::string project = args["project"].as<std::string>();
-  std::string task = args["task"].as<std::string>();
-  std::string tag = args["tag"].as<std::string>();
-  std::string due = args["due"].as<std::string>();
+  
+  std::string project = args.count("project") ? args["project"].as<std::string>() : "";
+  std::string task = args.count("task") ? args["task"].as<std::string>() : "";
+  std::string tag = args.count("tag") ? args["tag"].as<std::string>() : "";
+  std::string due = args.count("due") ? args["due"].as<std::string>() : "";
 
   bool completed = args.count("completed") > 0;
   bool incomplete = args.count("incomplete") > 0;
 
   if (project.empty()) {
-      throw MissingArguments();
+      std::cerr << "Error: missing project, task, tag, due, completed/incomplete argument(s)." << std::endl;
+        exit(1);
   }
 
   if (completed && incomplete) {
-      throw CompleteArgumentClash();
+      std::cerr << "Error: both --completed and --incomplete flags cannot be set simultaneously." << std::endl;
+        exit(1);
   }
 
+  if(args.count("due") && !task.empty() && !project.empty()) {
+    tlObj.getProject(project).getTask(task).getDueDate().setDateFromString(due);
+  }
 
+  if(!tag.empty() && !task.empty() && !project.empty()) {
+    TagContainer tags;
+
+    std::istringstream iss(tag);
+    std::string token;
+    while (std::getline(iss, token, ',')) {
+        tags.push_back(token);
+    }
+
+    tlObj.getProject(project).getTask(task).addTags(tags);
+  }
+
+  if(completed && !task.empty() && !project.empty()) {
+    tlObj.getProject(project).getTask(task).setComplete(true);
+  } else if(incomplete && !task.empty() && !project.empty()) {
+    tlObj.getProject(project).getTask(task).setComplete(false);
+  }
+
+  if (!args.count("due") && tag.empty() && !completed && !incomplete &&
+        !task.empty() && !project.empty()) {
+
+    tlObj.getProject(project).newTask(task);
+  }
+
+  if (!args.count("due") && tag.empty() && !completed && !incomplete &&
+        task.empty() && !project.empty()) {
+
+    tlObj.newProject(project);
+  }
 
 }

@@ -16,6 +16,8 @@
 
 #include "project.h"
 
+#include "lib_cxxopts.hpp"
+
 using ProjectContainer = std::vector<Project>;
 
 class TodoList {
@@ -49,7 +51,6 @@ public:
   nlohmann::json json() const;
   
   void parse(const nlohmann::json& json);
- 
 
 };
 

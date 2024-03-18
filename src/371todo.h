@@ -55,27 +55,10 @@ std::string getJSON(TodoList &tl, const std::string &p, const std::string &task,
                     const std::string &tag);
 
 
-void App::createAction(cxxopts::ParseResult &args, TodoList &tlObj);
+void createAction(cxxopts::ParseResult &args, TodoList &tlObj);
 
 
 } // namespace App
-
-
-
-struct MissingArguments : public std::runtime_error {
-  explicit MissingArguments()
-      : std::runtime_error("Error: missing project, task, tag, due, completed/incomplete argument(s).") {}
-
-  ~MissingArguments() override = default;
-};
-
-struct CompleteArgumentClash : public std::runtime_error {
-  explicit CompleteArgumentClash()
-      : std::runtime_error("Error: both --completed and --incomplete flags cannot be set simultaneously.") {}
-
-  ~CompleteArgumentClash() override = default;
-};
-
 
 
 #endif // _371TODO_H

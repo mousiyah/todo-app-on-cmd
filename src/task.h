@@ -29,13 +29,14 @@ private:
   TagContainer tags;
 
 public:
-  explicit Task(std::string ident);
+  explicit Task(const std::string& ident);
   ~Task() = default;
 
   const std::string& getIdent() const noexcept;
   void setIdent(std::string tIdent) noexcept;
 
   bool addTag(const std::string& tag);
+  bool addTags(const TagContainer& newTags);
   bool deleteTag(const std::string& tag);
   unsigned int numTags() const noexcept;
   bool containsTag(const std::string& tag) const noexcept;

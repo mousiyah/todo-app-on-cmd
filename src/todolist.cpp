@@ -50,11 +50,14 @@ Project& TodoList::newProject(const std::string& ident) {
     if (it != projects.end()) {
         return *it;
     }
+
     try {
-        projects.emplace_back(ident);
+        Project* project = new Project(ident);
+        projects.push_back(std::move(*project));
     } catch (const std::exception& e) {
         throw e;
     }
+
     return projects.back();
 
 }

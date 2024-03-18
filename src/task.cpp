@@ -17,7 +17,9 @@
 // Example:
 //  Task tObj{"Task Name"};
 
-Task::Task(std::string ident) : ident(std::move(ident)) {};
+Task::Task(const std::string& tIdent) : ident(tIdent) {
+    complete = false;
+};
 
 // TODO Write a function, getIdent, that returns the identifier for the Task.
 //
@@ -62,6 +64,16 @@ bool Task::addTag(const std::string& tag) {
     }
 
     return true;
+}
+
+bool Task::addTags(const TagContainer& newTags) {
+    bool allTagsAdded = true;
+    for (const auto& tag : newTags) {
+        if (!addTag(tag)) {
+            allTagsAdded = false;
+        }
+    }
+    return allTagsAdded;
 }
 
 // TODO Write a function, deleteTag, that takes one parameter, a tag
