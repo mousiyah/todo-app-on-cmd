@@ -65,7 +65,7 @@ struct ActionOptions {
     bool completeParsable();
 
     void extractArgs(const cxxopts::ParseResult &args);
-    void checkValidity();
+    void checkValidity(Action a);
 };
 
 static ActionOptions opt;

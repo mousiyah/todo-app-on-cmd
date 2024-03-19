@@ -52,6 +52,7 @@ int App::run(int argc, char *argv[]) {
 
   const Action a = parseActionArgument(args);
   opt.extractArgs(args);
+  opt.checkValidity(a);
 
   switch (a) {
     case Action::CREATE:
@@ -166,6 +167,10 @@ App::Action App::parseActionArgument(cxxopts::ParseResult &args) {
   throw std::invalid_argument("action");
 }
 
+
+
+
+
 // TODO Write a function, getJSON, that returns a std::string containing the
 // JSON representation of a TodoList object.
 //
@@ -179,13 +184,13 @@ App::Action App::parseActionArgument(cxxopts::ParseResult &args) {
 //  std::cout << getJSON(tlObj);
 std::string App::getJSON(TodoList &tlObj) {
 
-  if (!opt.hasProject) {
-    return tlObj.str();
-  }
-
   // The action program argument json can be ignored for 'due'.
   // Outputs and exit code values should delegated to the tag, task, and project arguments instead
   opt.hasDue = false;
+
+  if (opt.noneParsable()) {
+    return tlObj.str();
+  }
 
   if (opt.projectParsable()) {
     return getJSON(tlObj, opt.project);
@@ -312,22 +317,10 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
 
 
 
-// create action argument
+
+
+// --action create implementation
 void App::createAction(TodoList &tlObj) {
-  
-
-  
-  if (!opt.hasProject) {
-    exitWithError(MissingArgsErr);
-  }
-
-  // The flags are incompatible with one another 
-  // so can only be used in isolation and not in combination. 
-  // If used in combination, 
-  // output an error message to stderr and return an exit code of 1.
-  if (opt.completed && opt.incomplete) {
-    exitWithError(BothCompletedFlagsErr);
-  }
 
   if (opt.projectParsable()) {
     createAction(tlObj, opt.project);
@@ -461,6 +454,8 @@ void App::createAction(TodoList &tlObj, const std::string &p,
   }
     
 }
+
+
 
 
 
@@ -688,8 +683,29 @@ void App::ActionOptions::extractArgs(const cxxopts::ParseResult &args) {
 
 }
 
-void App::ActionOptions::checkValidity() {
+// Check validity of options given
+void App::ActionOptions::checkValidity(Action a) {
   
+  // for JSON we can provide no option
+  if (noneParsable() && a != Action::JSON ) {
+    exitWithError(MissingArgsErr);
+  }
+
+  // The flags are incompatible with one another 
+  if (completed && incomplete) {
+    exitWithError(BothCompletedFlagsErr);
+  }
+
+  // no project argument given
+  if(hasTask && !hasProject) {
+    exitWithError(MissingProjectArgsErr);
+  }
+
+  // no task argument given
+  if(!hasTask && (hasTag || hasDue || completed || incomplete)) {
+    exitWithError(MissingTaskArgsErr);
+  }
+
 }
 
 // Outputs error message and returns exits code 1.
