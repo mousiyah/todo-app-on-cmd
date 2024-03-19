@@ -67,7 +67,7 @@ int App::run(int argc, char *argv[]) {
       break;
 
     case Action::DELETE:
-      //deleteAction(tlObj);
+      deleteAction(tlObj);
       break;
 
     default:
@@ -294,6 +294,38 @@ void App::createAction(TodoList &tlObj) {
 
 }
 
+void App::deleteAction(TodoList &tlObj) {
+  
+  if (!opt.hasProject) {
+      std::cerr << "Error: missing project, task, tag, due, completed/incomplete argument(s)." << std::endl;
+        exit(1);
+  }
+
+  if(opt.dueParsable()) {
+    tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setUninitialised();
+  }
+
+  if(opt.tagParsable()) {
+    TagContainer tags;
+
+    std::istringstream iss(opt.tag);
+    std::string token;
+    while (std::getline(iss, token, ',')) {
+        tags.push_back(token);
+    }
+
+    tlObj.getProject(opt.project).getTask(opt.task).deleteTags(tags);
+  }
+
+  if (opt.taskParsable()) {
+    tlObj.getProject(opt.project).deleteTask(opt.task);
+  }
+
+  if (opt.projectParsable()) {
+    tlObj.deleteProject(opt.project);
+  }
+
+}
 
 // Action Options Struct methods implementation
 // if options given are enough to perform certain action, it returns true.
@@ -334,19 +366,19 @@ void App::extractArgs(const cxxopts::ParseResult &args) {
     opt.hasDue = args.count("due") > 0;
 
     if (opt.hasProject) {
-      args["project"].as<std::string>();
+      opt.project = args["project"].as<std::string>();
     }
 
     if(opt.hasTask) {
-       args["task"].as<std::string>();
+       opt.task = args["task"].as<std::string>();
     }
 
     if(opt.hasTag) {
-      args["tag"].as<std::string>();
+      opt.tag = args["tag"].as<std::string>();
     }
 
     if(opt.hasDue) {
-      args["due"].as<std::string>();
+      opt.due = args["due"].as<std::string>();
     }
 
     opt.completed = args.count("completed") > 0;
