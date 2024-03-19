@@ -345,7 +345,6 @@ void App::createAction(TodoList &tlObj) {
 }
 
 
-
 // Create new project in database.
 // Dont output anything and return an exit code of 0.
 // If a project exists already with that identifier, do nothing.
@@ -370,6 +369,7 @@ void App::createAction(TodoList &tlObj, const std::string &p,
   }
     
 }
+
 
 // tag argument can also be comma‐separated list without spaces 
 // (e.g. “tag1,tag2”) 
@@ -401,6 +401,7 @@ void App::createAction(TodoList &tlObj, const std::string &p,
   }
     
 }
+
 
 // Set to true (for completed) or false (for incomplete).
 // If project/task doesn't exist, error message to stderr and return exit code of 1.
@@ -479,6 +480,7 @@ void App::deleteAction(TodoList &tlObj) {
 
 }
 
+
 // If there is a project in the database delete it. 
 // If successful, don't output anything and return an exit code of 0. 
 // If not successful, (i.e., no project exists), 
@@ -490,6 +492,7 @@ void App::deleteAction(TodoList &tlObj, const std::string &p) {
         exitWithError(InvalidProjectErr);
     }
 }
+
 
 // If there is a task that belongs to project in the database delete it. 
 // If successful, don't output anything and return an exit code of 0. 
@@ -510,6 +513,7 @@ void App::deleteAction(TodoList &tlObj, const std::string &p, const std::string 
         exitWithError(InvalidProjectErr);
     }
 }
+
 
 // If there is a tag that belongs to task in the database delete it. 
 // If successful, don't output anything and return an exit code of 0. 
@@ -545,6 +549,7 @@ void App::deleteAction(TodoList &tlObj, const std::string &p,
   }
     
 }
+
 
 // If there is a due date set for the task reset the Date object to uninitialised. 
 // If successful, don't output anything and return an exit code of 0. 
