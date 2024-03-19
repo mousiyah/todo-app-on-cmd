@@ -65,16 +65,16 @@ struct NoTagError : public std::out_of_range {
   ~NoTagError() override = default;
 };
 
-struct AddTagError : public std::out_of_range {
+struct AddTagError : public std::runtime_error {
   explicit AddTagError(const std::string &tag)
-      : std::out_of_range("could not add tag with identifier '" + tag + "'") {}
+      : std::runtime_error("could not add tag with identifier '" + tag + "'") {}
 
   ~AddTagError() override = default;
 };
 
-struct DeleteTagError : public std::out_of_range {
+struct DeleteTagError : public std::runtime_error {
   explicit DeleteTagError(const std::string &tag)
-      : std::out_of_range("could not delete tag with identifier '" + tag + "'") {}
+      : std::runtime_error("could not delete tag with identifier '" + tag + "'") {}
 
   ~DeleteTagError() override = default;
 };

@@ -74,9 +74,9 @@ struct NoTaskError : public std::out_of_range {
   ~NoTaskError() override = default;
 };
 
-struct NewTaskError : public std::out_of_range {
+struct NewTaskError : public std::runtime_error {
   explicit NewTaskError(const std::string &tIdent)
-      : std::out_of_range("could not create new task with identifier '" + tIdent + "'") {}
+      : std::runtime_error("could not create new task with identifier '" + tIdent + "'") {}
 
   ~NewTaskError() override = default;
 };

@@ -63,23 +63,23 @@ struct NoProjectError : public std::out_of_range {
   ~NoProjectError() override = default;
 };
 
-struct DeleteProjectError : public std::out_of_range {
+struct DeleteProjectError : public std::runtime_error {
   explicit DeleteProjectError(const std::string &ident)
-      : std::out_of_range("could not delete project with identifier '" + ident + "'") {}
+      : std::runtime_error("could not delete project with identifier '" + ident + "'") {}
 
   ~DeleteProjectError() override = default;
 };
 
-struct NewProjectError : public std::out_of_range {
+struct NewProjectError : public std::runtime_error {
   explicit NewProjectError(const std::string &ident)
-      : std::out_of_range("could not create new project with identifier '" + ident + "'") {}
+      : std::runtime_error("could not create new project with identifier '" + ident + "'") {}
 
   ~NewProjectError() override = default;
 };
 
-struct AddProjectError : public std::out_of_range {
+struct AddProjectError : public std::runtime_error {
   explicit AddProjectError(const std::string &ident)
-      : std::out_of_range("could not add project with identifier '" + ident + "'") {}
+      : std::runtime_error("could not add project with identifier '" + ident + "'") {}
 
   ~AddProjectError() override = default;
 };
