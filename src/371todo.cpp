@@ -264,8 +264,12 @@ void App::createAction(TodoList &tlObj) {
         exit(1);
   }
 
-  if(opt.dueParsable()) {
-    tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setDateFromString(opt.due);
+  if (opt.projectParsable()) {
+    tlObj.newProject(opt.project);
+  }
+
+  if (opt.taskParsable()) {
+    tlObj.getProject(opt.project).newTask(opt.task);
   }
 
   if(opt.tagParsable()) {
@@ -276,29 +280,29 @@ void App::createAction(TodoList &tlObj) {
     }
   }
 
+  if(opt.dueParsable()) {
+    tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setDateFromString(opt.due);
+  }
+
   if(opt.completeParsable()) {
     tlObj.getProject(opt.project).getTask(opt.task).setComplete(opt.completed? true : false);
-  }
-
-  if (opt.taskParsable()) {
-    tlObj.getProject(opt.project).newTask(opt.task);
-  }
-
-  if (opt.projectParsable()) {
-    tlObj.newProject(opt.project);
   }
 
 }
 
 void App::deleteAction(TodoList &tlObj) {
-  
+
   if (!opt.hasProject) {
       std::cerr << MissingArgsErr << std::endl;
         exit(1);
   }
 
-  if(opt.dueParsable()) {
-    tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setUninitialised();
+  if (opt.projectParsable()) {
+    tlObj.deleteProject(opt.project);
+  }
+  
+  if (opt.taskParsable()) {
+    tlObj.getProject(opt.project).deleteTask(opt.task);
   }
 
   if(opt.tagParsable()) {
@@ -309,12 +313,8 @@ void App::deleteAction(TodoList &tlObj) {
     }
   }
 
-  if (opt.taskParsable()) {
-    tlObj.getProject(opt.project).deleteTask(opt.task);
-  }
-
-  if (opt.projectParsable()) {
-    tlObj.deleteProject(opt.project);
+  if(opt.dueParsable()) {
+    tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setUninitialised();
   }
 
 }
