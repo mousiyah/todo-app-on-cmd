@@ -178,9 +178,28 @@ App::Action App::parseActionArgument(cxxopts::ParseResult &args) {
 //  TodoList tlObj{};
 //  std::cout << getJSON(tlObj);
 std::string App::getJSON(TodoList &tlObj) {
-  return "{}";
-  // Only uncomment this once you have implemented the functions used!
-  return tlObj.str();
+
+  if (!opt.hasProject) {
+    return tlObj.str();
+  }
+
+  // The action program argument json can be ignored for 'due'.
+  // Outputs and exit code values should delegated to the tag, task, and project arguments instead
+  opt.hasDue = true;
+
+  if(opt.tagParsable()) {
+    return getJSON(tlObj, opt.project, opt.task, opt.tag);
+  }
+
+  if (opt.taskParsable()) {
+    return getJSON(tlObj, opt.project, opt.task);
+  }
+  
+  if (opt.projectParsable()) {
+    return getJSON(tlObj, opt.project);
+  }
+
+  return {};
 }
 
 // TODO Write a function, getJSON, that returns a std::string containing the
@@ -196,10 +215,17 @@ std::string App::getJSON(TodoList &tlObj) {
 //  std::string p = "project argument value";
 //  std::cout << getJSON(tlObj, p);
 std::string App::getJSON(TodoList &tlObj, const std::string &p) {
-  return "{}";
-  // Only uncomment this once you have implemented the functions used!
-  auto pObj = tlObj.getProject(p);
-  return pObj.str();
+
+  // If such a project does not exist, 
+  // output an error message to stderr and return an exit code of 1.
+  try {
+    auto pObj = tlObj.getProject(p);
+    return pObj.str();
+  } catch (const std::exception& e) {
+    exitWithError(e.what());
+    return {};
+  }
+
 }
 
 // TODO Write a function, getJSON, that returns a std::string containing the
@@ -217,11 +243,17 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p) {
 //  std::cout << getJSON(tlObj, p, t);
 std::string App::getJSON(TodoList &tlObj, const std::string &p,
                          const std::string &t) {
-  return "{}";
-  // Only uncomment this once you have implemented the functions used!
-  auto pObj = tlObj.getProject(p);
-  const auto tObj = pObj.getTask(t);
-  return tObj.str();
+
+  // If such a task or project does not exist, 
+  // output an error message to stderr and return an exit code of 1.
+  try {
+    auto pObj = tlObj.getProject(p);
+    const auto tObj = pObj.getTask(t);
+    return tObj.str();
+  } catch (const std::exception& e) {
+    exitWithError(e.what());
+    return {};
+  }
 }
 
 // DONE Write a function, getJSON, that returns a std::string containing the
@@ -241,27 +273,28 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
 //  std::cout << getJSON(tlObj, p, task, tag);
 std::string App::getJSON(TodoList &tlObj, const std::string &p,
                          const std::string &task, const std::string &tag) {
-  return "{}";
-  // Only uncomment this once you have implemented the functions used!
+
   auto pObj = tlObj.getProject(p);
   const auto tObj = pObj.getTask(task);
   if (tObj.containsTag(tag)) {
     return tag;
   } else {
-    return "";
+    exitWithError("Task does not contain such a tag");
+    return {};
   }
 }
 
+
+
+// create action argument
 void App::createAction(TodoList &tlObj) {
   
   if (!opt.hasProject) {
-      std::cerr << MissingArgsErr << std::endl;
-        exit(1);
+    exitWithError(MissingArgsErr);
   }
 
   if (opt.completed && opt.incomplete) {
-      std::cerr << BothCompletedFlagsErr << std::endl;
-        exit(1);
+    exitWithError(BothCompletedFlagsErr);
   }
 
   if (opt.projectParsable()) {
@@ -290,34 +323,63 @@ void App::createAction(TodoList &tlObj) {
 
 }
 
+
+
+// delete action argument
 void App::deleteAction(TodoList &tlObj) {
 
   if (!opt.hasProject) {
-      std::cerr << MissingArgsErr << std::endl;
-        exit(1);
+    exitWithError(MissingArgsErr);
   }
 
+  // If there is a project in the database delete it. 
+  // If successful, don't output anything and return an exit code of 0. 
+  // If not successful, (i.e., no project exists), 
+  // output an error message to stderr and return an exit code of 1.
   if (opt.projectParsable()) {
-    tlObj.deleteProject(opt.project);
+    try {
+      tlObj.deleteProject(opt.project);
+    } catch (const std::exception& e) {
+      exitWithError(e.what());
+    }
   }
   
+  // If there is a task that belongs to project in the database delete it. 
+  // If successful, don't output anything and return an exit code of 0. 
+  // If not successful, (i.e., no task/project exists), 
+  // output an error message to stderr and return an exit code of 1.
   if (opt.taskParsable()) {
-    tlObj.getProject(opt.project).deleteTask(opt.task);
-  }
-
-  if(opt.tagParsable()) {
-    std::istringstream iss(opt.tag);
-    std::string token;
-    while (std::getline(iss, token, ',')) {
-        tlObj.getProject(opt.project).getTask(opt.task).deleteTag(token);
+    try {
+      tlObj.getProject(opt.project).deleteTask(opt.task);
+    } catch (const std::exception& e) {
+      exitWithError(e.what());
     }
   }
 
+  // If there is a tag that belongs to task in the database delete it. 
+  // If successful, don't output anything and return an exit code of 0. 
+  // If not successful, (i.e., no tag/task/project exists),
+  // output an error message to stderr and return an exit code of 1.
+  if(opt.tagParsable()) {
+    try {
+      tlObj.getProject(opt.project).getTask(opt.task).deleteTag(opt.tag);
+    } catch (const std::exception& e) {
+      exitWithError(e.what());
+    }
+  }
+
+  // If there is a due date set for the task reset the Date object to uninitialised. 
+  // If successful, don't output anything and return an exit code of 0. 
+  // If not successful, (i.e., no tag/task/project exists), 
+  // output an error message to stderr and return an exit code of 1.
   if(opt.dueParsable()) {
     tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setUninitialised();
   }
 
 }
+
+
+
 
 // Action Options Struct methods implementation
 // if options given are enough to perform certain action, it returns true.
@@ -349,7 +411,6 @@ bool App::ActionOptions::completeParsable() {
 
 
 // Extracts options given with an action and initialises ActionOptions opt.
-
 void App::extractArgs(const cxxopts::ParseResult &args) {
 
     opt.hasProject = args.count("project") > 0;
@@ -376,4 +437,10 @@ void App::extractArgs(const cxxopts::ParseResult &args) {
     opt.completed = args.count("completed") > 0;
     opt.incomplete = args.count("incomplete") > 0;
 
+}
+
+// Outputs error message and returns exits code 1.
+void App::exitWithError(const std::string& message) {
+  std::cerr << message << std::endl;
+  exit(1);
 }
