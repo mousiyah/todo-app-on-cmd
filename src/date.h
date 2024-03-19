@@ -52,14 +52,12 @@ public:
 };
 
 
-
 struct InvalidDateError : public std::runtime_error {
   explicit InvalidDateError(const std::string &date)
       : std::runtime_error("Invalid Date format '" + date + "'") {}
 
   ~InvalidDateError() override = default;
 };
-
 
 
 #endif // DATE_H

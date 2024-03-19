@@ -53,6 +53,7 @@ public:
 
 };
 
+
 struct AddTaskError : public std::runtime_error {
   explicit AddTaskError(const std::string &tIdent)
       : std::runtime_error("could not add task with identifier '" + tIdent + "'") {}
@@ -80,7 +81,6 @@ struct NewTaskError : public std::runtime_error {
 
   ~NewTaskError() override = default;
 };
-
 
 
 #endif // PROJECT_H

@@ -9,7 +9,7 @@
 
 #include "project.h"
 
-// TODO Write a constructor that takes one parameter, a string identifier and
+// DONE Write a constructor that takes one parameter, a string identifier and
 // initialises the object and member data.
 //
 // Example:
@@ -17,7 +17,7 @@
 
 Project::Project(const std::string& pIdent) : ident(pIdent) {};
 
-// TODO Write a function, size, that takes no parameters and returns an unsigned
+// DONE Write a function, size, that takes no parameters and returns an unsigned
 // int of the number of Tasks in the Project contains.
 //
 // Example:
@@ -28,7 +28,7 @@ unsigned int Project::size() const noexcept {
     return tasks.size();
 }
 
-// TODO Write a function, getIdent, that returns the identifier for the Project.
+// DONE Write a function, getIdent, that returns the identifier for the Project.
 //
 // Example:
 //  Project pObj{"projectIdent"};
@@ -38,7 +38,7 @@ const std::string& Project::getIdent() const noexcept {
     return ident;
 }
 
-// TODO Write a function, setIdent, that takes one parameter, a string for a new
+// DONE Write a function, setIdent, that takes one parameter, a string for a new
 // Project identifier, and updates the member variable. It returns nothing.
 //
 // Example:
@@ -49,7 +49,7 @@ void Project::setIdent(std::string pIdent) noexcept {
     ident = std::move(pIdent);
 }
 
-// TODO Write a function, newTask, that takes one parameter, a Task identifier,
+// DONE Write a function, newTask, that takes one parameter, a Task identifier,
 // (a string) and returns the Task object as a reference. If an object with the
 // same identifier already exists, then the existing object should be returned.
 // Throw a std::runtime_error if the Task object cannot be inserted into the
@@ -86,7 +86,7 @@ const TaskContainer& Project::getTasks() const noexcept {
     return tasks;
 }
 
-// TODO Write a function, addTask, that takes one parameter, a Task object, and
+// DONE Write a function, addTask, that takes one parameter, a Task object, and
 // returns true if the object was successfully inserted. If an object with the
 // same identifier already exists, then:
 //  - the tags should be merged
@@ -116,7 +116,7 @@ bool Project::addTask(Task task) {
     return true;
 }
 
-// TODO Write a function, getTask, that takes one parameter, a Task identifier
+// DONE Write a function, getTask, that takes one parameter, a Task identifier
 // (a string) and returns the Task as a reference. If no Task exists, throw an
 // appropriate exception.
 //
@@ -136,7 +136,7 @@ Task &Project::getTask(const std::string &tIdent) {
     return *it;
 }
 
-// TODO Write a function, deleteTask, that takes one parameter, a Task
+// DONE Write a function, deleteTask, that takes one parameter, a Task
 // identifier (a string), deletes it from the container, and returns true if the
 // Task was deleted. If no Task exists, throw an appropriate exception.
 //
@@ -160,7 +160,7 @@ bool Project::deleteTask(const std::string &tIdent) {
     return true;
 }
 
-// TODO Write an == operator overload for the Project class, such that two
+// DONE Write an == operator overload for the Project class, such that two
 // Project objects are equal only if they have the same identifier and same
 // Tasks.
 //
@@ -176,26 +176,26 @@ bool operator==(const Project& project1, const Project& project2) noexcept {
     return project1.ident == project2.ident && project1.tasks == project2.tasks;
 }
 
-// Merge projects
+// Merge given project with current one
 void Project::mergeProjects(const Project& newProject) noexcept{
     for (const Task& task : newProject.getTasks()) {
         addTask(task);
     }
 }
 
-// TODO Write a function, str, that takes no parameters and returns a
+// DONE Write a function, str, that takes no parameters and returns a
 // std::string of the JSON representation of the data in the Project.
 //
 // See the coursework specification for how this JSON should look.
 //
 // Example:
 //  Project pObj{"projectIdent"};
-//  std::string s = pObj.str();
 
 std::string Project::str() const {
     return json().dump();
 }
 
+// Convert Project to json object and return it
 nlohmann::json Project::json() const {
     nlohmann::json jsonProject;
 
@@ -206,6 +206,7 @@ nlohmann::json Project::json() const {
         return jsonProject;
 }
 
+// Parse and initialise Project from the provided json object
 void Project::parse(const nlohmann::json& json) {
     for (auto it : json.items()) {
 

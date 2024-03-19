@@ -10,12 +10,13 @@
 #include <ctime>
 
 #include "date.h"
+
 // Provided default constructor to create an unitialised date.
 Date::Date() {
     setUninitialised();
 }
 
-// TODO write a function setDateFromString that takes a string argument in
+// DONE write a function setDateFromString that takes a string argument in
 // "YYYY-MM-DD" format and sets the appropriate member variables (year, month,
 // day, and initialised). If dateString is empty reset the object to its
 // uninitialised state (see default constructor). If dateString is not valid
@@ -58,7 +59,7 @@ void Date::setUninitialised() noexcept {
     initialised = false;
 }
 
-// TODO Write a function, isInitialised, that takes no parameters and returns true
+// DONE Write a function, isInitialised, that takes no parameters and returns true
 //  if the Date object is initialised, and false if it is NOT initialised.
 // Example:
 //  Date d = Date();
@@ -70,7 +71,7 @@ bool Date::isInitialised() const noexcept{
     return initialised;
 }
 
-// TODO Write a function, str, that takes no parameters and returns a
+// DONE Write a function, str, that takes no parameters and returns a
 // std::string representation of the Date object in YYYY-MM-DD format.  If the
 // Date object is NOT initialised, return an empty string.
 // Example:
@@ -84,7 +85,7 @@ std::string Date::str() const {
     return std::to_string(year) + "-" + std::to_string(month) + "-" + std::to_string(day);
 }
 
-// TODO create a function, setDate, that takes three parameters: year, month,
+// DONE create a function, setDate, that takes three parameters: year, month,
 // day and sets the appropriate member variables to those parameters and also
 // sets the initilized flag.
 // Example:
@@ -98,7 +99,7 @@ void Date::setDate(unsigned int year, unsigned int month, unsigned int day) noex
     initialised = true;
 }
 
-// TODO Write a function, getYear, that takes no parameters and returns year
+// DONE Write a function, getYear, that takes no parameters and returns year
 // member variable
 //  Date d = Date();
 //  auto year = d.getYear();
@@ -107,7 +108,7 @@ unsigned int Date::getYear() const noexcept{
     return year;
 }
 
-// TODO Write a function, getMonth, that takes no parameters and returns month
+// DONE Write a function, getMonth, that takes no parameters and returns month
 // member variable
 //  Date d = Date();
 //  auto month = d.getMonth();
@@ -116,7 +117,7 @@ unsigned int Date::getMonth() const noexcept{
     return month;
 }
 
-// TODO Write a function, getDay, that takes no parameters and returns day
+// DONE Write a function, getDay, that takes no parameters and returns day
 // member variable
 //  Date d = Date();
 //  auto day = d.getDay();
@@ -125,7 +126,7 @@ unsigned int Date::getDay() const noexcept{
     return day;
 }
 
-// TODO Write an == operator overload for the Date class, such that two
+// DONE Write an == operator overload for the Date class, such that two
 // Date objects are equal only if they have the same member variables.
 // Example
 //  Date d1 = Date();
@@ -143,7 +144,7 @@ bool operator==(const Date& date1, const Date& date2) noexcept {
            date1.isInitialised() == date2.isInitialised();
 }
 
-// TODO Write an < operator overload for the Date class, that returns true if
+// DONE Write an < operator overload for the Date class, that returns true if
 // the first Date object is chronologically before the second date object.
 // Otherwise return false. Note: You can ignore the 'initialised' member
 // variable when drawing the comparison.

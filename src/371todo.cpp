@@ -15,7 +15,7 @@
 #include "371todo.h"
 #include "lib_cxxopts.hpp"
 
-// TODO Complete this function. You have been provided some skeleton code which
+// DONE Complete this function. You have been provided some skeleton code which
 //  retrieves the database file name from cxxopts.
 //  1. Load the database file by calling load() on a TodoList object
 //  2. Parse the 'action' argument to decide what action should be taken
@@ -141,7 +141,7 @@ cxxopts::Options App::cxxoptsSetup() {
   return cxxopts;
 }
 
-// TODO Rewrite this function so that it works. This function should
+// DONE Rewrite this function so that it works. This function should
 // case-insensitively check the action argument retrieved from cxxopts and
 // convert this to a value from the ACTION enum. If an invalid value is given
 // in a string, throw an std::invalid_argument exception.
@@ -169,9 +169,7 @@ App::Action App::parseActionArgument(cxxopts::ParseResult &args) {
 
 
 
-
-
-// TODO Write a function, getJSON, that returns a std::string containing the
+// DONE Write a function, getJSON, that returns a std::string containing the
 // JSON representation of a TodoList object.
 //
 // This function has been implemented for you, but you may wish to adjust it.
@@ -207,7 +205,7 @@ std::string App::getJSON(TodoList &tlObj) {
   return {};
 }
 
-// TODO Write a function, getJSON, that returns a std::string containing the
+// DONE Write a function, getJSON, that returns a std::string containing the
 // JSON representation of a specific Project in a TodoList object.
 //
 // This function has been implemented for you, but you may wish to adjust it.
@@ -222,8 +220,7 @@ std::string App::getJSON(TodoList &tlObj) {
 std::string App::getJSON(TodoList &tlObj, const std::string &p) {
 
   std::string result;
-  // If such a project does not exist, 
-  // output an error message to stderr and return an exit code of 1.
+
   try {
     auto pObj = tlObj.getProject(p);
     result = pObj.str();
@@ -234,7 +231,7 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p) {
   return result;
 }
 
-// TODO Write a function, getJSON, that returns a std::string containing the
+// DONE Write a function, getJSON, that returns a std::string containing the
 //  JSON representation of a specific Task in a TodoList object.
 //
 // This function has been implemented for you, but you may wish to adjust it.
@@ -251,8 +248,7 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
                          const std::string &t) {
   
   std::string result;
-  // If such a task or project does not exist, 
-  // output an error message to stderr and return an exit code of 1.
+
   try {
     auto pObj = tlObj.getProject(p);
 
@@ -317,8 +313,6 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
 
 
 
-
-
 // --action create implementation
 void App::createAction(TodoList &tlObj) {
 
@@ -344,15 +338,14 @@ void App::createAction(TodoList &tlObj) {
 
 }
 
-
-// Create new project in database.
+// Create project.
 // Dont output anything and return an exit code of 0.
 // If a project exists already with that identifier, do nothing.
 void App::createAction(TodoList &tlObj, const std::string &p) {
     tlObj.newProject(p);
 }
 
-
+// Create task in a project.
 // New tasks default to incomplete and without a due date (Date is uninitialised).
 // Dont output anything and return an exit code of 0.
 // If a task exists already with that identifier, do nothing.
@@ -371,8 +364,8 @@ void App::createAction(TodoList &tlObj, const std::string &p,
     
 }
 
-
-// tag argument can also be comma‐separated list without spaces 
+// Create tag(s) for a task.
+// Tag argument can be comma‐separated list without spaces 
 // (e.g. “tag1,tag2”) 
 // If a tag exists already with that identifier, do nothing
 // (and continue adding other tags in the tag list, if applicable). 
@@ -406,7 +399,7 @@ void App::createAction(TodoList &tlObj, const std::string &p,
     
 }
 
-
+// Create 'completed' for a task.
 // Set to true (for completed) or false (for incomplete).
 // If project/task doesn't exist, error message to stderr and return exit code of 1.
 void App::createAction(TodoList &tlObj, const std::string &p,
@@ -430,7 +423,7 @@ void App::createAction(TodoList &tlObj, const std::string &p,
     
 }
 
-
+// Create due for a task.
 // If the due argument is empty, (re)set the due date to uninitalised.
 // If the due argument is not a valid date and is also not empty, 
 // output an error message to stderr and return an exit code of 1. 
@@ -464,8 +457,6 @@ void App::createAction(TodoList &tlObj, const std::string &p,
 
 
 
-
-
 // --action delete implementation
 void App::deleteAction(TodoList &tlObj) {
 
@@ -487,7 +478,7 @@ void App::deleteAction(TodoList &tlObj) {
 
 }
 
-
+// Delete project.
 // If there is a project in the database delete it. 
 // If successful, don't output anything and return an exit code of 0. 
 // If not successful, (i.e., no project exists), 
@@ -500,7 +491,7 @@ void App::deleteAction(TodoList &tlObj, const std::string &p) {
     }
 }
 
-
+// Delete task from a project.
 // If there is a task that belongs to project in the database delete it. 
 // If successful, don't output anything and return an exit code of 0. 
 // If not successful, (i.e., no task/project exists), 
@@ -521,7 +512,7 @@ void App::deleteAction(TodoList &tlObj, const std::string &p, const std::string 
     }
 }
 
-
+// Delete tag(s) from a task.
 // If there is a tag that belongs to task in the database delete it. 
 // If successful, don't output anything and return an exit code of 0. 
 // If not successful, (i.e., no tag/task/project exists),
@@ -540,7 +531,7 @@ void App::deleteAction(TodoList &tlObj, const std::string &p,
       while (std::getline(iss, tag, ',')) {
 
         try{
-        tObj.deleteTag(tag);
+          tObj.deleteTag(tag);
         } catch (const std::exception& e) {
           exitWithError(InvalidTagErr);
         }
@@ -557,7 +548,7 @@ void App::deleteAction(TodoList &tlObj, const std::string &p,
     
 }
 
-
+// Delete due date from a task.
 // If there is a due date set for the task reset the Date object to uninitialised. 
 // If successful, don't output anything and return an exit code of 0. 
 // If not successful, (i.e., no task/project exists), 
@@ -582,8 +573,6 @@ void App::deleteAction(TodoList &tlObj, const std::string &p,
   }
     
 }
-
-
 
 
 
@@ -613,8 +602,7 @@ void App::updateAction(TodoList &tlObj) {
 
 }
 
-
-// Rename project in database.
+// Rename project.
 // project argument in the format oldidentifier:newidentifier
 // If successfull dont output anything and return an exit code of 0.
 // If such a project does not exist 
@@ -641,12 +629,11 @@ void App::updateAction(TodoList &tlObj, const std::string &p){
 
   }
 
-
-  // Rename task that belongs to project in database.
-  // task argument in the format oldidentifier:newidentifier
-  // If successfull dont output anything and return an exit code of 0.
-  // If such a task does not exist 
-  // output an error message to stderr and return an exit code of 1.
+// Rename task in a project.
+// task argument in the format oldidentifier:newidentifier
+// If successfull dont output anything and return an exit code of 0.
+// If such a task does not exist 
+// output an error message to stderr and return an exit code of 1.
 
 void App::updateAction(TodoList &tlObj, const std::string &p, const std::string &t) {
 
@@ -677,7 +664,7 @@ void App::updateAction(TodoList &tlObj, const std::string &p, const std::string 
 
 }
 
-
+// Update due date.
 // Due date should be created/replaced
 // If the due argument is empty, (re)set the due date to uninitalised
 // If the due argument is not a valid date (or is empty) 
@@ -706,12 +693,11 @@ void App::updateAction(TodoList &tlObj, const std::string &p,
 
 
 
-
-
 // Action Options Struct methods implementation
 // if options given are enough to perform certain action, it returns true.
 // For example, if the Action is '--action create --project value',
 // projectParsable() returns true.
+
 bool App::ActionOptions::noneParsable() {
   return !hasDue && !hasTag && !completed && !incomplete && !hasTask
             && !hasProject;
@@ -738,6 +724,7 @@ bool App::ActionOptions::dueParsable() {
 bool App::ActionOptions::completeParsable() {
   return (completed || incomplete) && hasTask && hasProject;
 }
+
 
 // Extracts options given with an action and initialises ActionOptions opt.
 void App::ActionOptions::extractArgs(const cxxopts::ParseResult &args) {
@@ -776,7 +763,7 @@ void App::ActionOptions::checkValidity(Action a) {
     exitWithError(MissingArgsErr);
   }
 
-  // The flags are incompatible with one another 
+  // Complete && incomplete flags are incompatible with one another 
   if (completed && incomplete) {
     exitWithError(BothCompletedFlagsErr);
   }

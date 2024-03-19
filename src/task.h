@@ -25,7 +25,7 @@ class Task {
 private:
   std::string ident;
   Date dueDate;
-  bool complete = false;
+  bool completed = false;
   TagContainer tags;
 
 public:

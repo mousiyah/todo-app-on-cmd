@@ -55,7 +55,6 @@ public:
 };
 
 
-
 struct NoProjectError : public std::out_of_range {
   explicit NoProjectError(const std::string &ident)
       : std::out_of_range("unknown project with identifier '" + ident + "'") {}
@@ -90,7 +89,6 @@ struct FileOpenError : public std::runtime_error {
 
     ~FileOpenError() override = default;
 };
-
 
 
 #endif // TODOLIST_H

@@ -42,7 +42,7 @@ const std::string STUDENT_NUMBER = "2130288";
 // program argument.
 enum Action { CREATE, JSON, DELETE, UPDATE };
 
-
+// Helper struct to extract, validate and apply Action argument options.
 struct ActionOptions {
     std::string project;
     std::string task;
