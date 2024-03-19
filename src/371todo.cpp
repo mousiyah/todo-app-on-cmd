@@ -300,11 +300,11 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
       if (tObj.containsTag(tag)) {
         result = tag;
       } else {
-        result = "";
+        exitWithError(InvalidTagErr);
       }
 
     } catch (const std::exception& e) {
-      exitWithError(InvalidTagErr);
+      exitWithError(InvalidTaskErr);
     }  
 
   } catch (const std::exception& e) {
