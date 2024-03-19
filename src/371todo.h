@@ -80,7 +80,7 @@ std::string getJSON(TodoList &tl, const std::string &p, const std::string &task,
 
 void createAction(TodoList &tlObj);
 void deleteAction(TodoList &tlObj);
-
+void updateAction(TodoList &tlObj);
 
 void extractArgs(const cxxopts::ParseResult &args);
 

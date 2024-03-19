@@ -63,7 +63,7 @@ int App::run(int argc, char *argv[]) {
       break;
 
     case Action::UPDATE:
-      throw std::runtime_error("update not implemented");
+      updateAction(tlObj);
       break;
 
     case Action::DELETE:
@@ -185,7 +185,7 @@ std::string App::getJSON(TodoList &tlObj) {
 
   // The action program argument json can be ignored for 'due'.
   // Outputs and exit code values should delegated to the tag, task, and project arguments instead
-  opt.hasDue = true;
+  opt.hasDue = false;
 
   if(opt.tagParsable()) {
     return getJSON(tlObj, opt.project, opt.task, opt.tag);
@@ -293,32 +293,74 @@ void App::createAction(TodoList &tlObj) {
     exitWithError(MissingArgsErr);
   }
 
+  // The flags are incompatible with one another 
+  // so can only be used in isolation and not in combination. 
+  // If used in combination, 
+  // output an error message to stderr and return an exit code of 1.
   if (opt.completed && opt.incomplete) {
     exitWithError(BothCompletedFlagsErr);
   }
 
+  // Create new project in database.
+  // Dont output anything and return an exit code of 0.
+  // If a project exists already with that identifier, do nothing.
   if (opt.projectParsable()) {
     tlObj.newProject(opt.project);
   }
 
+  // New tasks default to incomplete and without a due date (Date is uninitialised).
+  // Dont output anything and return an exit code of 0.
+  // If a task exists already with that identifier, do nothing.
+  // If project doesn't exist, error message to stderr and return an exit code of 1.
   if (opt.taskParsable()) {
-    tlObj.getProject(opt.project).newTask(opt.task);
-  }
-
-  if(opt.tagParsable()) {
-    std::istringstream iss(opt.tag);
-    std::string token;
-    while (std::getline(iss, token, ',')) {
-        tlObj.getProject(opt.project).getTask(opt.task).addTag(token);
+    try {
+      tlObj.getProject(opt.project).newTask(opt.task);
+    } catch (const std::exception& e) {
+      exitWithError(e.what());
     }
   }
 
-  if(opt.dueParsable()) {
-    tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setDateFromString(opt.due);
+  // tag argument can also be comma‐separated list without spaces 
+  // (e.g. “tag1,tag2”) 
+  // If a tag exists already with that identifier, do nothing
+  // (and continue adding other tags in the tag list, if applicable). 
+  // In both cases, should not output anything and exit with a code of 0.
+  // If project/task doesn't exist, error message to stderr and return exit code of 1.
+  if(opt.tagParsable()) {
+    std::istringstream iss(opt.tag);
+    std::string tag;
+    while (std::getline(iss, tag, ',')) {
+      try {
+        tlObj.getProject(opt.project).getTask(opt.task).addTag(tag);
+      } catch (const std::exception& e) {
+      exitWithError(e.what());
+      }
+    }
   }
 
+  // If the due argument is empty, (re)set the due date to uninitalised.
+  // If the due argument is not a valid date and is also not empty, 
+  // output an error message to stderr and return an exit code of 1. 
+  // Otherwise set the due date, if it has not been set yet.
+  // If a due date already exists, overwrite it. 
+  // In both cases should not output anything and exit with a code of 0.
+  // If project/task doesn't exist, error message to stderr and return exit code of 1.
+  if(opt.dueParsable()) {
+    try {
+      tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setDateFromString(opt.due);
+    } catch (const std::exception& e) {
+      exitWithError(e.what());
+    }
+  }
+
+  // Set to true (for completed) or false (for incomplete).
+  // If project/task doesn't exist, error message to stderr and return exit code of 1.
   if(opt.completeParsable()) {
-    tlObj.getProject(opt.project).getTask(opt.task).setComplete(opt.completed? true : false);
+    try {
+      tlObj.getProject(opt.project).getTask(opt.task).setComplete(opt.completed? true : false);
+    } catch (const std::exception& e) {
+      exitWithError(e.what());
+    }
   }
 
 }
@@ -378,6 +420,113 @@ void App::deleteAction(TodoList &tlObj) {
 
 }
 
+
+
+// update action argument
+void App::updateAction(TodoList &tlObj) {
+  
+  if (!opt.hasProject) {
+    exitWithError(MissingArgsErr);
+  }
+
+  // The action program argument update can be ignored for 'tag'.
+  // Outputs and exit code values should delegated to the task and/or project arguments instead
+  opt.hasTag = false;
+
+  // The flags are incompatible with one another 
+  // so can only be used in isolation and not in combination. 
+  // If used in combination, 
+  // output an error message to stderr and return an exit code of 1.
+  if (opt.completed && opt.incomplete) {
+    exitWithError(BothCompletedFlagsErr);
+  }
+
+  // Rename project in database.
+  // project argument in the format oldidentifier:newidentifier
+  // If successfull dont output anything and return an exit code of 0.
+  // If such a project does not exist 
+  // output an error message to stderr and return an exit code of 1.
+  if (opt.projectParsable()) {
+
+    if (opt.project.find(':') != std::string::npos) {
+      std::istringstream iss(opt.project);
+      std::string oldIdent, newIdent;
+      std::getline(iss, oldIdent, ':');
+      std::getline(iss, newIdent);
+
+      try{
+        tlObj.getProject(oldIdent).setIdent(newIdent);
+      } catch (const std::exception& e) {
+        exitWithError(e.what());
+      }
+     
+    } else {
+      exitWithError("Error: Project argument should be in the format oldidentifier:newidentifier");
+    }
+  }
+
+  // Rename task or/and project that belongs to project in database.
+  // task argument in the format oldidentifier:newidentifier
+  // If successfull dont output anything and return an exit code of 0.
+  // If such a task/project does not exist 
+  // output an error message to stderr and return an exit code of 1.
+  if (opt.taskParsable()) {
+
+    if (opt.project.find(':') != std::string::npos) {
+      std::istringstream iss(opt.task);
+      std::string oldIdent, newIdent;
+      std::getline(iss, oldIdent, ':');
+      std::getline(iss, newIdent);
+
+      try {
+        tlObj.getProject(opt.project).setIdent(newIdent);
+      } catch (const std::exception& e) {
+        exitWithError(e.what());
+      }
+    }
+
+    if (opt.task.find(':') != std::string::npos) {
+      std::istringstream iss(opt.task);
+      std::string oldIdent, newIdent;
+      std::getline(iss, oldIdent, ':');
+      std::getline(iss, newIdent);
+
+      try {
+        tlObj.getProject(opt.project).getTask(oldIdent).setIdent(newIdent);
+      } catch (const std::exception& e) {
+        exitWithError(e.what());
+      }
+    } else {
+      exitWithError("Error: Task argument should be in the format oldidentifier:newidentifier");
+    }
+  }
+
+  // If the due argument is empty, (re)set the due date to uninitalised.
+  // If the due argument is not a valid date and is also not empty, 
+  // output an error message to stderr and return an exit code of 1. 
+  // Otherwise set the due date, if it has not been set yet.
+  // If a due date already exists, overwrite it. 
+  // In both cases should not output anything and exit with a code of 0.
+  // If project/task doesn't exist, error message to stderr and return exit code of 1.
+  if(opt.dueParsable()) {
+    try {
+      tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setDateFromString(opt.due);
+    } catch (const std::exception& e) {
+      exitWithError(e.what());
+    }
+  }
+
+  // Set to true (for completed) or false (for incomplete).
+  // If project/task doesn't exist, error message to stderr and return exit code of 1.
+  if(opt.completeParsable()) {
+    try {
+      tlObj.getProject(opt.project).getTask(opt.task).setComplete(opt.completed? true : false);
+    } catch (const std::exception& e) {
+      exitWithError(e.what());
+    }
+  }
+
+}
 
 
 
