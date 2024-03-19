@@ -304,7 +304,7 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
       }
 
     } catch (const std::exception& e) {
-      exitWithError(InvalidTaskErr);
+      exitWithError(InvalidTagErr);
     }  
 
   } catch (const std::exception& e) {
@@ -406,13 +406,13 @@ void App::createAction(TodoList &tlObj, const std::string &p,
 // Set to true (for completed) or false (for incomplete).
 // If project/task doesn't exist, error message to stderr and return exit code of 1.
 void App::createAction(TodoList &tlObj, const std::string &p,
-                         const std::string &task,  const bool complete) {
+                         const std::string &t,  const bool complete) {
 
   try {
     auto& pObj = tlObj.getProject(p);
 
     try {
-      auto& tObj = pObj.getTask(task);
+      auto& tObj = pObj.getTask(t);
 
       tObj.setComplete(complete);
 
@@ -435,13 +435,13 @@ void App::createAction(TodoList &tlObj, const std::string &p,
 // In both cases should not output anything and exit with a code of 0.
 // If project/task doesn't exist, error message to stderr and return exit code of 1.
 void App::createAction(TodoList &tlObj, const std::string &p,
-                         const std::string &task,  const std::string &due, bool isDue) {
+                         const std::string &t,  const std::string &due, bool isDue) {
 
   try {
     auto& pObj = tlObj.getProject(p);
 
     try {
-      auto& tObj = pObj.getTask(task);
+      auto& tObj = pObj.getTask(t);
 
       tObj.getDueDate().setDateFromString(due);
 
@@ -459,58 +459,121 @@ void App::createAction(TodoList &tlObj, const std::string &p,
 
 
 
-// delete action argument
+// --action delete implementation
 void App::deleteAction(TodoList &tlObj) {
 
-  if (!opt.hasProject) {
-    exitWithError(MissingArgsErr);
-  }
-
-  // If there is a project in the database delete it. 
-  // If successful, don't output anything and return an exit code of 0. 
-  // If not successful, (i.e., no project exists), 
-  // output an error message to stderr and return an exit code of 1.
-  if (opt.projectParsable()) {
-    try {
-      tlObj.deleteProject(opt.project);
-    } catch (const std::exception& e) {
-      exitWithError(e.what());
+    if (opt.projectParsable()) {
+        deleteAction(tlObj, opt.project);
     }
-  }
-  
-  // If there is a task that belongs to project in the database delete it. 
-  // If successful, don't output anything and return an exit code of 0. 
-  // If not successful, (i.e., no task/project exists), 
-  // output an error message to stderr and return an exit code of 1.
-  if (opt.taskParsable()) {
-    try {
-      tlObj.getProject(opt.project).deleteTask(opt.task);
-    } catch (const std::exception& e) {
-      exitWithError(e.what());
-    }
-  }
 
-  // If there is a tag that belongs to task in the database delete it. 
-  // If successful, don't output anything and return an exit code of 0. 
-  // If not successful, (i.e., no tag/task/project exists),
-  // output an error message to stderr and return an exit code of 1.
-  if(opt.tagParsable()) {
-    try {
-      tlObj.getProject(opt.project).getTask(opt.task).deleteTag(opt.tag);
-    } catch (const std::exception& e) {
-      exitWithError(e.what());
+    if (opt.taskParsable()) {
+        deleteAction(tlObj, opt.project, opt.task);
     }
-  }
 
-  // If there is a due date set for the task reset the Date object to uninitialised. 
-  // If successful, don't output anything and return an exit code of 0. 
-  // If not successful, (i.e., no tag/task/project exists), 
-  // output an error message to stderr and return an exit code of 1.
-  if(opt.dueParsable()) {
-    tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setUninitialised();
-  }
+    if (opt.tagParsable()) {
+        deleteAction(tlObj, opt.project, opt.task, opt.tag);
+    }
+
+    bool isDue = true; // value of due doesn't matter on delete && to differ from parsing tag
+    if (opt.dueParsable()) {
+        deleteAction(tlObj, opt.project, opt.task, isDue);
+    }
 
 }
+
+// If there is a project in the database delete it. 
+// If successful, don't output anything and return an exit code of 0. 
+// If not successful, (i.e., no project exists), 
+// output an error message to stderr and return an exit code of 1.
+void App::deleteAction(TodoList &tlObj, const std::string &p) {
+    try {
+        tlObj.deleteProject(p);
+    } catch (const std::exception &e) {
+        exitWithError(InvalidProjectErr);
+    }
+}
+
+// If there is a task that belongs to project in the database delete it. 
+// If successful, don't output anything and return an exit code of 0. 
+// If not successful, (i.e., no task/project exists), 
+// output an error message to stderr and return an exit code of 1.
+void App::deleteAction(TodoList &tlObj, const std::string &p, const std::string &t) {
+    try {
+        auto& pObj = tlObj.getProject(p);
+        
+        try {
+          pObj.deleteTask(t);
+
+        } catch (const std::exception &e) {
+        exitWithError(InvalidTaskErr);
+        }
+
+    } catch (const std::exception &e) {
+        exitWithError(InvalidProjectErr);
+    }
+}
+
+// If there is a tag that belongs to task in the database delete it. 
+// If successful, don't output anything and return an exit code of 0. 
+// If not successful, (i.e., no tag/task/project exists),
+// output an error message to stderr and return an exit code of 1.
+void App::deleteAction(TodoList &tlObj, const std::string &p,
+                         const std::string &task,  const std::string &tags) {
+
+  try {
+    auto& pObj = tlObj.getProject(p);
+
+    try {
+      auto& tObj = pObj.getTask(task);
+
+      std::istringstream iss(tags);
+      std::string tag;
+      while (std::getline(iss, tag, ',')) {
+
+        try{
+        tObj.deleteTag(tag);
+        } catch (const std::exception& e) {
+          exitWithError(InvalidTagErr);
+        }
+
+      }
+
+    } catch (const std::exception& e) {
+      exitWithError(InvalidTaskErr);
+    }
+
+  } catch (const std::exception& e) {
+    exitWithError(InvalidProjectErr);
+  }
+    
+}
+
+// If there is a due date set for the task reset the Date object to uninitialised. 
+// If successful, don't output anything and return an exit code of 0. 
+// If not successful, (i.e., no task/project exists), 
+// output an error message to stderr and return an exit code of 1.
+void App::deleteAction(TodoList &tlObj, const std::string &p,
+                         const std::string &task, bool isDue) {
+
+  try {
+    auto& pObj = tlObj.getProject(p);
+
+    try {
+      auto& tObj = pObj.getTask(task);
+
+      tObj.getDueDate().setUninitialised();
+
+    } catch (const std::exception& e) {
+      exitWithError(InvalidTaskErr);
+    }
+
+  } catch (const std::exception& e) {
+    exitWithError(InvalidProjectErr);
+  }
+    
+}
+
+
 
 
 

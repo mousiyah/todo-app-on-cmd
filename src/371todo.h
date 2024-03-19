@@ -87,13 +87,20 @@ void createAction(TodoList &tlObj, const std::string &p);
 void createAction(TodoList &tlObj, const std::string &p, const std::string &t);
 void createAction(TodoList &tlObj, const std::string &p, const std::string &task,  
                         const std::string &tags);
-void createAction(TodoList &tlObj, const std::string &p, const std::string &task, 
+void createAction(TodoList &tlObj, const std::string &p, const std::string &t, 
                         const bool complete);
-void createAction(TodoList &tlObj, const std::string &p, const std::string &task, 
+void createAction(TodoList &tlObj, const std::string &p, const std::string &t, 
                         const std::string &due, bool isDue);
 
 
 void deleteAction(TodoList &tlObj);
+void deleteAction(TodoList &tlObj, const std::string &p);
+void deleteAction(TodoList &tlObj, const std::string &p, const std::string &t);
+void deleteAction(TodoList &tlObj, const std::string &p, const std::string &task,  
+                        const std::string &tags);
+void deleteAction(TodoList &tlObj, const std::string &p, const std::string &t, bool isDue);
+
+
 void updateAction(TodoList &tlObj);
 
 void exitWithError(const std::string& message);
@@ -106,6 +113,7 @@ const std::string BothCompletedFlagsErr = "Error: both --completed and --incompl
 
 const std::string InvalidProjectErr = "Error: invalid project argument(s).";
 const std::string InvalidTaskErr = "Error: invalid task argument(s).";
+const std::string InvalidTagErr = "Error: invalid tag argument.";
 
 } // namespace App
 
