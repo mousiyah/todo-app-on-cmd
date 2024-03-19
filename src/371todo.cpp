@@ -255,12 +255,12 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
 void App::createAction(TodoList &tlObj) {
   
   if (!opt.hasProject) {
-      std::cerr << "Error: missing project, task, tag, due, completed/incomplete argument(s)." << std::endl;
+      std::cerr << MissingArgsErr << std::endl;
         exit(1);
   }
 
   if (opt.completed && opt.incomplete) {
-      std::cerr << "Error: both --completed and --incomplete flags cannot be set simultaneously." << std::endl;
+      std::cerr << BothCompletedFlagsErr << std::endl;
         exit(1);
   }
 
@@ -269,15 +269,11 @@ void App::createAction(TodoList &tlObj) {
   }
 
   if(opt.tagParsable()) {
-    TagContainer tags;
-
     std::istringstream iss(opt.tag);
     std::string token;
     while (std::getline(iss, token, ',')) {
-        tags.push_back(token);
+        tlObj.getProject(opt.project).getTask(opt.task).addTag(token);
     }
-
-    tlObj.getProject(opt.project).getTask(opt.task).addTags(tags);
   }
 
   if(opt.completeParsable()) {
@@ -297,7 +293,7 @@ void App::createAction(TodoList &tlObj) {
 void App::deleteAction(TodoList &tlObj) {
   
   if (!opt.hasProject) {
-      std::cerr << "Error: missing project, task, tag, due, completed/incomplete argument(s)." << std::endl;
+      std::cerr << MissingArgsErr << std::endl;
         exit(1);
   }
 
@@ -306,15 +302,11 @@ void App::deleteAction(TodoList &tlObj) {
   }
 
   if(opt.tagParsable()) {
-    TagContainer tags;
-
     std::istringstream iss(opt.tag);
     std::string token;
     while (std::getline(iss, token, ',')) {
-        tags.push_back(token);
+        tlObj.getProject(opt.project).getTask(opt.task).deleteTag(token);
     }
-
-    tlObj.getProject(opt.project).getTask(opt.task).deleteTags(tags);
   }
 
   if (opt.taskParsable()) {

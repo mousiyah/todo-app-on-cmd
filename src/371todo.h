@@ -84,6 +84,11 @@ void deleteAction(TodoList &tlObj);
 
 void extractArgs(const cxxopts::ParseResult &args);
 
+
+const std::string MissingArgsErr = "Error: missing project, task, tag, due, completed/incomplete argument(s).";
+const std::string BothCompletedFlagsErr = "Error: both --completed and --incomplete flags cannot be set simultaneously.";
+
+
 } // namespace App
 
 

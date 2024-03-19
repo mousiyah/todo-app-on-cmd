@@ -66,16 +66,6 @@ bool Task::addTag(const std::string& tag) {
     return true;
 }
 
-bool Task::addTags(const TagContainer& newTags) {
-    bool allTagsAdded = true;
-    for (const auto& tag : newTags) {
-        if (!addTag(tag)) {
-            allTagsAdded = false;
-        }
-    }
-    return allTagsAdded;
-}
-
 // TODO Write a function, deleteTag, that takes one parameter, a tag
 // string, deletes it from the container, and returns true if the tag
 // string was deleted. If no tag exists with that name, throw an appropriate
@@ -98,16 +88,6 @@ bool Task::deleteTag(const std::string& tag) {
         throw e;
     }
     return true;
-}
-
-bool Task::deleteTags(const TagContainer& tagsToDelete) {
-    bool allTagsDeleted = true;
-    for (const auto& tag : tagsToDelete) {
-        if (!deleteTag(tag)) {
-            allTagsDeleted = false;
-        }
-    }
-    return allTagsDeleted;
 }
 
 // TODO Write a function, numTags, that takes no parameters and returns an
