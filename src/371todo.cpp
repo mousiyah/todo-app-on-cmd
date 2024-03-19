@@ -51,7 +51,7 @@ int App::run(int argc, char *argv[]) {
   tlObj.load(db);
 
   const Action a = parseActionArgument(args);
-  extractArgs(args);
+  opt.extractArgs(args);
 
   switch (a) {
     case Action::CREATE:
@@ -315,6 +315,8 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
 // create action argument
 void App::createAction(TodoList &tlObj) {
   
+
+  
   if (!opt.hasProject) {
     exitWithError(MissingArgsErr);
   }
@@ -327,68 +329,137 @@ void App::createAction(TodoList &tlObj) {
     exitWithError(BothCompletedFlagsErr);
   }
 
-  // Create new project in database.
-  // Dont output anything and return an exit code of 0.
-  // If a project exists already with that identifier, do nothing.
   if (opt.projectParsable()) {
-    tlObj.newProject(opt.project);
+    createAction(tlObj, opt.project);
   }
 
-  // New tasks default to incomplete and without a due date (Date is uninitialised).
-  // Dont output anything and return an exit code of 0.
-  // If a task exists already with that identifier, do nothing.
-  // If project doesn't exist, error message to stderr and return an exit code of 1.
   if (opt.taskParsable()) {
-    try {
-      tlObj.getProject(opt.project).newTask(opt.task);
-    } catch (const std::exception& e) {
-      exitWithError(e.what());
-    }
+    createAction(tlObj, opt.project, opt.task);
   }
 
-  // tag argument can also be comma‐separated list without spaces 
-  // (e.g. “tag1,tag2”) 
-  // If a tag exists already with that identifier, do nothing
-  // (and continue adding other tags in the tag list, if applicable). 
-  // In both cases, should not output anything and exit with a code of 0.
-  // If project/task doesn't exist, error message to stderr and return exit code of 1.
   if(opt.tagParsable()) {
-    std::istringstream iss(opt.tag);
-    std::string tag;
-    while (std::getline(iss, tag, ',')) {
-      try {
-        tlObj.getProject(opt.project).getTask(opt.task).addTag(tag);
-      } catch (const std::exception& e) {
-      exitWithError(e.what());
-      }
-    }
+    createAction(tlObj, opt.project, opt.task, opt.tag);
   }
 
-  // If the due argument is empty, (re)set the due date to uninitalised.
-  // If the due argument is not a valid date and is also not empty, 
-  // output an error message to stderr and return an exit code of 1. 
-  // Otherwise set the due date, if it has not been set yet.
-  // If a due date already exists, overwrite it. 
-  // In both cases should not output anything and exit with a code of 0.
-  // If project/task doesn't exist, error message to stderr and return exit code of 1.
+  bool isDue = true; // to differ from parsing tag
   if(opt.dueParsable()) {
-    try {
-      tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setDateFromString(opt.due);
-    } catch (const std::exception& e) {
-      exitWithError(e.what());
-    }
+    createAction(tlObj, opt.project, opt.task, opt.due, isDue);
   }
 
-  // Set to true (for completed) or false (for incomplete).
-  // If project/task doesn't exist, error message to stderr and return exit code of 1.
   if(opt.completeParsable()) {
-    try {
-      tlObj.getProject(opt.project).getTask(opt.task).setComplete(opt.completed? true : false);
-    } catch (const std::exception& e) {
-      exitWithError(e.what());
-    }
+    createAction(tlObj, opt.project, opt.task, opt.completed? true : false);
   }
 
+}
+
+
+
+// Create new project in database.
+// Dont output anything and return an exit code of 0.
+// If a project exists already with that identifier, do nothing.
+void App::createAction(TodoList &tlObj, const std::string &p) {
+    tlObj.newProject(p);
+}
+
+
+// New tasks default to incomplete and without a due date (Date is uninitialised).
+// Dont output anything and return an exit code of 0.
+// If a task exists already with that identifier, do nothing.
+// If project doesn't exist, error message to stderr and return an exit code of 1.
+void App::createAction(TodoList &tlObj, const std::string &p,
+                         const std::string &t) {
+  
+  try {
+    auto& pObj = tlObj.getProject(p);
+    pObj.newTask(t);
+
+  } catch (const std::exception& e) {
+    exitWithError(InvalidProjectErr);
+  }
+    
+}
+
+// tag argument can also be comma‐separated list without spaces 
+// (e.g. “tag1,tag2”) 
+// If a tag exists already with that identifier, do nothing
+// (and continue adding other tags in the tag list, if applicable). 
+// In both cases, should not output anything and exit with a code of 0.
+// If project/task doesn't exist, error message to stderr and return exit code of 1.
+void App::createAction(TodoList &tlObj, const std::string &p,
+                         const std::string &task,  const std::string &tags) {
+
+  try {
+    auto& pObj = tlObj.getProject(p);
+
+    try {
+      auto& tObj = pObj.getTask(task);
+
+      std::istringstream iss(tags);
+      std::string tag;
+      while (std::getline(iss, tag, ',')) {
+        tObj.addTag(tag);
+      }
+
+    } catch (const std::exception& e) {
+      exitWithError(InvalidTaskErr);
+    }
+
+  } catch (const std::exception& e) {
+    exitWithError(InvalidProjectErr);
+  }
+    
+}
+
+// Set to true (for completed) or false (for incomplete).
+// If project/task doesn't exist, error message to stderr and return exit code of 1.
+void App::createAction(TodoList &tlObj, const std::string &p,
+                         const std::string &task,  const bool complete) {
+
+  try {
+    auto& pObj = tlObj.getProject(p);
+
+    try {
+      auto& tObj = pObj.getTask(task);
+
+      tObj.setComplete(complete);
+
+    } catch (const std::exception& e) {
+      exitWithError(InvalidTaskErr);
+    }
+
+  } catch (const std::exception& e) {
+    exitWithError(InvalidProjectErr);
+  }
+    
+}
+
+
+// If the due argument is empty, (re)set the due date to uninitalised.
+// If the due argument is not a valid date and is also not empty, 
+// output an error message to stderr and return an exit code of 1. 
+// Otherwise set the due date, if it has not been set yet.
+// If a due date already exists, overwrite it. 
+// In both cases should not output anything and exit with a code of 0.
+// If project/task doesn't exist, error message to stderr and return exit code of 1.
+void App::createAction(TodoList &tlObj, const std::string &p,
+                         const std::string &task,  const std::string &due, bool isDue) {
+
+  try {
+    auto& pObj = tlObj.getProject(p);
+
+    try {
+      auto& tObj = pObj.getTask(task);
+
+      tObj.getDueDate().setDateFromString(due);
+
+    } catch (const std::exception& e) {
+      exitWithError(InvalidTaskErr);
+    }
+
+  } catch (const std::exception& e) {
+    exitWithError(InvalidProjectErr);
+  }
+    
 }
 
 
@@ -561,6 +632,11 @@ void App::updateAction(TodoList &tlObj) {
 // For example, if the Action is '--action create --project value',
 // projectParsable() returns true.
 
+bool App::ActionOptions::noneParsable() {
+  return !hasDue && !hasTag && !completed && !incomplete && !hasTask
+            && !hasProject;
+}
+
 bool App::ActionOptions::projectParsable() {
   return !hasDue && !hasTag && !completed && !incomplete && !hasTask
             && hasProject;
@@ -583,35 +659,37 @@ bool App::ActionOptions::completeParsable() {
   return (completed || incomplete) && hasTask && hasProject;
 }
 
-
-
 // Extracts options given with an action and initialises ActionOptions opt.
-void App::extractArgs(const cxxopts::ParseResult &args) {
+void App::ActionOptions::extractArgs(const cxxopts::ParseResult &args) {
 
-    opt.hasProject = args.count("project") > 0;
-    opt.hasTask = args.count("task") > 0;
-    opt.hasTag = args.count("tag") > 0;
-    opt.hasDue = args.count("due") > 0;
+    hasProject = args.count("project") > 0;
+    hasTask = args.count("task") > 0;
+    hasTag = args.count("tag") > 0;
+    hasDue = args.count("due") > 0;
 
-    if (opt.hasProject) {
-      opt.project = args["project"].as<std::string>();
+    if (hasProject) {
+      project = args["project"].as<std::string>();
     }
 
-    if(opt.hasTask) {
-       opt.task = args["task"].as<std::string>();
+    if(hasTask) {
+       task = args["task"].as<std::string>();
     }
 
-    if(opt.hasTag) {
-      opt.tag = args["tag"].as<std::string>();
+    if(hasTag) {
+      tag = args["tag"].as<std::string>();
     }
 
-    if(opt.hasDue) {
+    if(hasDue) {
       opt.due = args["due"].as<std::string>();
     }
 
-    opt.completed = args.count("completed") > 0;
-    opt.incomplete = args.count("incomplete") > 0;
+    completed = args.count("completed") > 0;
+    incomplete = args.count("incomplete") > 0;
 
+}
+
+void App::ActionOptions::checkValidity() {
+  
 }
 
 // Outputs error message and returns exits code 1.

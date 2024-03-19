@@ -57,11 +57,15 @@ struct ActionOptions {
     bool completed;
     bool incomplete;
 
+    bool noneParsable();
     bool projectParsable();
     bool taskParsable();
     bool tagParsable();
     bool dueParsable();
     bool completeParsable();
+
+    void extractArgs(const cxxopts::ParseResult &args);
+    void checkValidity();
 };
 
 static ActionOptions opt;
@@ -79,19 +83,29 @@ std::string getJSON(TodoList &tl, const std::string &p, const std::string &task,
                     const std::string &tag);
 
 void createAction(TodoList &tlObj);
+void createAction(TodoList &tlObj, const std::string &p);
+void createAction(TodoList &tlObj, const std::string &p, const std::string &t);
+void createAction(TodoList &tlObj, const std::string &p, const std::string &task,  
+                        const std::string &tags);
+void createAction(TodoList &tlObj, const std::string &p, const std::string &task, 
+                        const bool complete);
+void createAction(TodoList &tlObj, const std::string &p, const std::string &task, 
+                        const std::string &due, bool isDue);
+
+
 void deleteAction(TodoList &tlObj);
 void updateAction(TodoList &tlObj);
-
-void extractArgs(const cxxopts::ParseResult &args);
 
 void exitWithError(const std::string& message);
 
 const std::string MissingArgsErr = "Error: missing project, task, tag, due, completed/incomplete argument(s).";
+const std::string MissingProjectArgsErr = "Error: missing project argument(s).";
+const std::string MissingTaskArgsErr = "Error: missing task argument(s).";
+
 const std::string BothCompletedFlagsErr = "Error: both --completed and --incomplete flags cannot be set simultaneously.";
 
 const std::string InvalidProjectErr = "Error: invalid project argument(s).";
 const std::string InvalidTaskErr = "Error: invalid task argument(s).";
-
 
 } // namespace App
 
