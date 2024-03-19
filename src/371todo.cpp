@@ -187,17 +187,17 @@ std::string App::getJSON(TodoList &tlObj) {
   // Outputs and exit code values should delegated to the tag, task, and project arguments instead
   opt.hasDue = false;
 
-  if(opt.tagParsable()) {
-    return getJSON(tlObj, opt.project, opt.task, opt.tag);
+  if (opt.projectParsable()) {
+    return getJSON(tlObj, opt.project);
   }
 
   if (opt.taskParsable()) {
     return getJSON(tlObj, opt.project, opt.task);
   }
-  
-  if (opt.projectParsable()) {
-    return getJSON(tlObj, opt.project);
-  }
+
+  if(opt.tagParsable()) {
+    return getJSON(tlObj, opt.project, opt.task, opt.tag);
+  }  
 
   return {};
 }
@@ -216,16 +216,17 @@ std::string App::getJSON(TodoList &tlObj) {
 //  std::cout << getJSON(tlObj, p);
 std::string App::getJSON(TodoList &tlObj, const std::string &p) {
 
+  std::string result;
   // If such a project does not exist, 
   // output an error message to stderr and return an exit code of 1.
   try {
     auto pObj = tlObj.getProject(p);
-    return pObj.str();
+    result = pObj.str();
   } catch (const std::exception& e) {
-    exitWithError(e.what());
-    return {};
+    exitWithError(InvalidProjectErr);
   }
 
+  return result;
 }
 
 // TODO Write a function, getJSON, that returns a std::string containing the
@@ -243,17 +244,26 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p) {
 //  std::cout << getJSON(tlObj, p, t);
 std::string App::getJSON(TodoList &tlObj, const std::string &p,
                          const std::string &t) {
-
+  
+  std::string result;
   // If such a task or project does not exist, 
   // output an error message to stderr and return an exit code of 1.
   try {
     auto pObj = tlObj.getProject(p);
-    const auto tObj = pObj.getTask(t);
-    return tObj.str();
+
+    try {
+      const auto tObj = pObj.getTask(t);
+      result = tObj.str();
+    } catch (const std::exception& e) {
+      exitWithError(InvalidTaskErr);
+    }   
+
   } catch (const std::exception& e) {
-    exitWithError(e.what());
-    return {};
+    exitWithError(InvalidProjectErr);
   }
+
+  return result;
+    
 }
 
 // DONE Write a function, getJSON, that returns a std::string containing the
@@ -274,14 +284,30 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
 std::string App::getJSON(TodoList &tlObj, const std::string &p,
                          const std::string &task, const std::string &tag) {
 
-  auto pObj = tlObj.getProject(p);
-  const auto tObj = pObj.getTask(task);
-  if (tObj.containsTag(tag)) {
-    return tag;
-  } else {
-    exitWithError("Task does not contain such a tag");
-    return {};
+  std::string result;
+  try {
+    auto pObj = tlObj.getProject(p);
+
+    try {
+      const auto tObj = pObj.getTask(task);
+
+
+      if (tObj.containsTag(tag)) {
+        result = tag;
+      } else {
+        result = "";
+      }
+
+    } catch (const std::exception& e) {
+      exitWithError(InvalidTaskErr);
+    }  
+
+  } catch (const std::exception& e) {
+    exitWithError(InvalidProjectErr);
   }
+
+  return result;
+
 }
 
 

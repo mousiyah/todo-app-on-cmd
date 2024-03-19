@@ -89,6 +89,9 @@ void exitWithError(const std::string& message);
 const std::string MissingArgsErr = "Error: missing project, task, tag, due, completed/incomplete argument(s).";
 const std::string BothCompletedFlagsErr = "Error: both --completed and --incomplete flags cannot be set simultaneously.";
 
+const std::string InvalidProjectErr = "Error: invalid project argument(s).";
+const std::string InvalidTaskErr = "Error: invalid task argument(s).";
+
 
 } // namespace App
 
