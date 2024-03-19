@@ -65,8 +65,8 @@ Task &Project::newTask(const std::string &tIdent) {
         return *it;
     }
     try {
-        Task* task = new Task(tIdent);
-        tasks.push_back(std::move(*task));
+        Task task(tIdent);
+        tasks.push_back(std::move(task));
     } catch (const std::exception& e) {
         throw e;
     }

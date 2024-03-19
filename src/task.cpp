@@ -251,9 +251,9 @@ void Task::parse(const nlohmann::json& json) {
         setComplete(json["completed"].get<bool>());
     }
     if (json.contains("dueDate")) {
-        Date* date = new Date();
-        date->setDateFromString(json["dueDate"].get<std::string>());
-        setDueDate(*date);
+        Date date;
+        date.setDateFromString(json["dueDate"].get<std::string>());
+        setDueDate(date);
     }
     if (json.contains("tags")) {
         for (const auto& tag : json["tags"]) {

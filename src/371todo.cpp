@@ -51,9 +51,11 @@ int App::run(int argc, char *argv[]) {
   tlObj.load(db);
 
   const Action a = parseActionArgument(args);
+  extractArgs(args);
+
   switch (a) {
     case Action::CREATE:
-      createAction(tlObj, args);
+      createAction(tlObj);
       break;
 
     case Action::JSON:
@@ -65,7 +67,7 @@ int App::run(int argc, char *argv[]) {
       break;
 
     case Action::DELETE:
-      deleteAction(tlObj, args);
+      //deleteAction(tlObj);
       break;
 
     default:
@@ -250,105 +252,104 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
   }
 }
 
-void App::createAction(TodoList &tlObj, cxxopts::ParseResult &args) {
+void App::createAction(TodoList &tlObj) {
   
-  std::string project = args.count("project") ? args["project"].as<std::string>() : "";
-  std::string task = args.count("task") ? args["task"].as<std::string>() : "";
-  std::string tag = args.count("tag") ? args["tag"].as<std::string>() : "";
-  std::string due = args.count("due") ? args["due"].as<std::string>() : "";
-
-  bool completed = args.count("completed") > 0;
-  bool incomplete = args.count("incomplete") > 0;
-
-  if (project.empty()) {
+  if (!opt.hasProject) {
       std::cerr << "Error: missing project, task, tag, due, completed/incomplete argument(s)." << std::endl;
         exit(1);
   }
 
-  if (completed && incomplete) {
+  if (opt.completed && opt.incomplete) {
       std::cerr << "Error: both --completed and --incomplete flags cannot be set simultaneously." << std::endl;
         exit(1);
   }
 
-  if(args.count("due") && !task.empty() && !project.empty()) {
-    tlObj.getProject(project).getTask(task).getDueDate().setDateFromString(due);
+  if(opt.dueParsable()) {
+    tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setDateFromString(opt.due);
   }
 
-  if(!tag.empty() && !task.empty() && !project.empty()) {
+  if(opt.tagParsable()) {
     TagContainer tags;
 
-    std::istringstream iss(tag);
+    std::istringstream iss(opt.tag);
     std::string token;
     while (std::getline(iss, token, ',')) {
         tags.push_back(token);
     }
 
-    tlObj.getProject(project).getTask(task).addTags(tags);
+    tlObj.getProject(opt.project).getTask(opt.task).addTags(tags);
   }
 
-  if(completed && !task.empty() && !project.empty()) {
-    tlObj.getProject(project).getTask(task).setComplete(true);
-  } else if(incomplete && !task.empty() && !project.empty()) {
-    tlObj.getProject(project).getTask(task).setComplete(false);
+  if(opt.completeParsable()) {
+    tlObj.getProject(opt.project).getTask(opt.task).setComplete(opt.completed? true : false);
   }
 
-  if (!args.count("due") && tag.empty() && !completed && !incomplete &&
-        !task.empty() && !project.empty()) {
-
-    tlObj.getProject(project).newTask(task);
+  if (opt.taskParsable()) {
+    tlObj.getProject(opt.project).newTask(opt.task);
   }
 
-  if (!args.count("due") && tag.empty() && !completed && !incomplete &&
-        task.empty() && !project.empty()) {
-
-    tlObj.newProject(project);
+  if (opt.projectParsable()) {
+    tlObj.newProject(opt.project);
   }
 
 }
 
-void App::deleteAction(TodoList &tlObj, cxxopts::ParseResult &args) {
-  
-  std::string project = args.count("project") ? args["project"].as<std::string>() : "";
-  std::string task = args.count("task") ? args["task"].as<std::string>() : "";
-  std::string tag = args.count("tag") ? args["tag"].as<std::string>() : "";
-  std::string due = args.count("due") ? args["due"].as<std::string>() : "";
 
-  if (project.empty()) {
-      std::cerr << "Error: missing project, task, tag, due, completed/incomplete argument(s)." << std::endl;
-        exit(1);
-  }
+// Action Options Struct methods implementation
+// if options given are enough to perform certain action, it returns true.
+// For example, if the Action is '--action create --project value',
+// projectParsable() returns true.
 
-  if(args.count("due") && !task.empty() && !project.empty()) {
-    try {
-      tlObj.getProject(project).getTask(task).getDueDate().setUninitialised();
-    } catch (const std::exception& e){
-      std::cerr << e.what() << std::endl;
-        exit(1);
+bool App::ActionOptions::projectParsable() {
+  return !hasDue && !hasTag && !completed && !incomplete && !hasTask
+            && hasProject;
+}
+
+bool App::ActionOptions::taskParsable() {
+  return !hasDue && !hasTag && !completed && !incomplete
+            && hasTask && hasProject;
+}
+
+bool App::ActionOptions::tagParsable() {
+  return hasTag && hasTask && hasProject;
+}
+
+bool App::ActionOptions::dueParsable() {
+  return hasDue && hasTask && hasProject;
+}
+
+bool App::ActionOptions::completeParsable() {
+  return (completed || incomplete) && hasTask && hasProject;
+}
+
+
+
+// Extracts options given with an action and initialises ActionOptions opt.
+
+void App::extractArgs(const cxxopts::ParseResult &args) {
+
+    opt.hasProject = args.count("project") > 0;
+    opt.hasTask = args.count("task") > 0;
+    opt.hasTag = args.count("tag") > 0;
+    opt.hasDue = args.count("due") > 0;
+
+    if (opt.hasProject) {
+      args["project"].as<std::string>();
     }
-  }
 
-  if(!tag.empty() && !task.empty() && !project.empty()) {
-    TagContainer tags;
-
-    std::istringstream iss(tag);
-    std::string token;
-    while (std::getline(iss, token, ',')) {
-        tags.push_back(token);
+    if(opt.hasTask) {
+       args["task"].as<std::string>();
     }
 
-    tlObj.getProject(project).getTask(task).deleteTags(tags);
-  }
+    if(opt.hasTag) {
+      args["tag"].as<std::string>();
+    }
 
-  if (!args.count("due") && tag.empty() &&
-        !task.empty() && !project.empty()) {
+    if(opt.hasDue) {
+      args["due"].as<std::string>();
+    }
 
-    tlObj.getProject(project).deleteTask(task);
-  }
-
-  if (!args.count("due") && tag.empty() &&
-        task.empty() && !project.empty()) {
-
-    tlObj.deleteProject(project);
-  }
+    opt.completed = args.count("completed") > 0;
+    opt.incomplete = args.count("incomplete") > 0;
 
 }

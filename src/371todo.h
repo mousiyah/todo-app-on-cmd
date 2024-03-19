@@ -42,7 +42,29 @@ const std::string STUDENT_NUMBER = "2130288";
 // program argument.
 enum Action { CREATE, JSON, DELETE, UPDATE };
 
-enum Argument { PROJECT, TASK, TAG, DUE, COMPLETED, INCOMPLETE};
+
+struct ActionOptions {
+    std::string project;
+    std::string task;
+    std::string tag;
+    std::string due;
+
+    bool hasProject;
+    bool hasTask;
+    bool hasTag;
+    bool hasDue;
+
+    bool completed;
+    bool incomplete;
+
+    bool projectParsable();
+    bool taskParsable();
+    bool tagParsable();
+    bool dueParsable();
+    bool completeParsable();
+};
+
+static ActionOptions opt;
 
 int run(int argc, char *argv[]);
 
@@ -56,10 +78,11 @@ std::string getJSON(TodoList &tl, const std::string &p, const std::string &t);
 std::string getJSON(TodoList &tl, const std::string &p, const std::string &task,
                     const std::string &tag);
 
+void createAction(TodoList &tlObj);
+//void deleteAction(TodoList &tlObj);
 
-void createAction(TodoList &tlObj, cxxopts::ParseResult &args);
-void deleteAction(TodoList &tlObj, cxxopts::ParseResult &args);
 
+void extractArgs(const cxxopts::ParseResult &args);
 
 } // namespace App
 

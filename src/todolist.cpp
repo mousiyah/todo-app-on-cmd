@@ -52,8 +52,8 @@ Project& TodoList::newProject(const std::string& ident) {
     }
 
     try {
-        Project* project = new Project(ident);
-        projects.push_back(std::move(*project));
+        Project project(ident);
+        projects.push_back(std::move(project));
     } catch (const std::exception& e) {
         throw e;
     }
@@ -242,14 +242,13 @@ void TodoList::load(const std::string& filename) {
 //  tObj.save("database.json");
 
 void TodoList::save(const std::string& filename) {
-    // TODO: Implement saving to JSON file
     std::ofstream file(filename);
 
     if (!file.is_open()) {
         throw FileOpenError(filename);
     }
     
-    file << json().dump(); // 2 for identation
+    file << json().dump();
 
     file.close();
 }
@@ -294,7 +293,7 @@ nlohmann::json TodoList::json() const {
         return jsonTodoList;
 }
 
-// Parse and initialize TodoList from provided json object
+// Parse and initialise TodoList from provided json object
 void TodoList::parse(const nlohmann::json& json) {
     for (auto it : json.items()) {
         
