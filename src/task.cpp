@@ -60,7 +60,7 @@ bool Task::addTag(const std::string& tag) {
     try {
         tags.push_back(std::move(tag));
     } catch (const std::exception& e) {
-        throw e;
+        throw AddTagError(tag);
     }
 
     return true;
@@ -85,7 +85,7 @@ bool Task::deleteTag(const std::string& tag) {
     try {
         tags.erase(it);
     } catch (const std::exception& e) {
-        throw e;
+        throw DeleteTagError(tag);
     }
     return true;
 }

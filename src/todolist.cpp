@@ -55,7 +55,7 @@ Project& TodoList::newProject(const std::string& ident) {
         Project project(ident);
         projects.push_back(std::move(project));
     } catch (const std::exception& e) {
-        throw e;
+        throw NewProjectError(ident);
     }
 
     return projects.back();
@@ -97,7 +97,7 @@ bool TodoList::addProject(const Project& project) {
     try {
         projects.push_back(std::move(project));
     } catch (const std::exception& e) {
-        throw e;
+        throw AddProjectError(project.getIdent());
     }
 
     return true;
@@ -139,7 +139,7 @@ bool TodoList::deleteProject(const std::string& ident) {
     try {
         projects.erase(it);
     } catch (const std::exception& e) {
-        throw e;
+        throw DeleteProjectError(ident);
     }
 
     return true;

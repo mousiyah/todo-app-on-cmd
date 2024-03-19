@@ -53,13 +53,32 @@ public:
 
 };
 
+struct AddTaskError : public std::runtime_error {
+  explicit AddTaskError(const std::string &tIdent)
+      : std::runtime_error("could not add task with identifier '" + tIdent + "'") {}
 
+  ~AddTaskError() override = default;
+};
+
+struct DeleteTaskError : public std::runtime_error {
+  explicit DeleteTaskError(const std::string &tIdent)
+      : std::runtime_error("could not delete task with identifier '" + tIdent + "'") {}
+
+  ~DeleteTaskError() override = default;
+};
 
 struct NoTaskError : public std::out_of_range {
   explicit NoTaskError(const std::string &tIdent)
       : std::out_of_range("unknown task with identifier '" + tIdent + "'") {}
 
   ~NoTaskError() override = default;
+};
+
+struct NewTaskError : public std::out_of_range {
+  explicit NewTaskError(const std::string &tIdent)
+      : std::out_of_range("could not create new task with identifier '" + tIdent + "'") {}
+
+  ~NewTaskError() override = default;
 };
 
 

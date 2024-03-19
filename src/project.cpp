@@ -68,7 +68,7 @@ Task &Project::newTask(const std::string &tIdent) {
         Task task(tIdent);
         tasks.push_back(std::move(task));
     } catch (const std::exception& e) {
-        throw e;
+        throw NewTaskError(tIdent);
     }
     return tasks.back();
 }
@@ -110,7 +110,7 @@ bool Project::addTask(Task task) {
     try {
         tasks.push_back(std::move(task));
     } catch (const std::exception& e) {
-        throw e;
+        throw AddTaskError(task.getIdent());
     }
 
     return true;
@@ -154,7 +154,7 @@ bool Project::deleteTask(const std::string &tIdent) {
     try {
         tasks.erase(it);
     } catch (const std::exception& e) {
-        throw e;
+        throw DeleteTaskError(tIdent);
     }
 
     return true;
