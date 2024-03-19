@@ -356,7 +356,7 @@ void App::createAction(TodoList &tlObj, const std::string &p) {
 // New tasks default to incomplete and without a due date (Date is uninitialised).
 // Dont output anything and return an exit code of 0.
 // If a task exists already with that identifier, do nothing.
-// If project doesn't exist, error message to stderr and return an exit code of 1.
+// If project doesn't exist, create project and come back to create task.
 void App::createAction(TodoList &tlObj, const std::string &p,
                          const std::string &t) {
   
@@ -365,7 +365,8 @@ void App::createAction(TodoList &tlObj, const std::string &p,
     pObj.newTask(t);
 
   } catch (const std::exception& e) {
-    exitWithError(InvalidProjectErr);
+    createAction(tlObj, p);
+    createAction(tlObj, p, t);
   }
     
 }
@@ -376,7 +377,7 @@ void App::createAction(TodoList &tlObj, const std::string &p,
 // If a tag exists already with that identifier, do nothing
 // (and continue adding other tags in the tag list, if applicable). 
 // In both cases, should not output anything and exit with a code of 0.
-// If project/task doesn't exist, error message to stderr and return exit code of 1.
+// If project/task doesn't exist, create them and come back to create tag.
 void App::createAction(TodoList &tlObj, const std::string &p,
                          const std::string &task,  const std::string &tags) {
 
@@ -393,11 +394,14 @@ void App::createAction(TodoList &tlObj, const std::string &p,
       }
 
     } catch (const std::exception& e) {
-      exitWithError(InvalidTaskErr);
+      createAction(tlObj, p, task);
+      createAction(tlObj, p, task, tags);
     }
 
   } catch (const std::exception& e) {
-    exitWithError(InvalidProjectErr);
+    createAction(tlObj, p);
+    createAction(tlObj, p, task);
+    createAction(tlObj, p, task, tags);
   }
     
 }
@@ -433,7 +437,7 @@ void App::createAction(TodoList &tlObj, const std::string &p,
 // Otherwise set the due date, if it has not been set yet.
 // If a due date already exists, overwrite it. 
 // In both cases should not output anything and exit with a code of 0.
-// If project/task doesn't exist, error message to stderr and return exit code of 1.
+// If project/task doesn't exist, create them and come back to create due date.
 void App::createAction(TodoList &tlObj, const std::string &p,
                          const std::string &t,  const std::string &due, bool isDue) {
 
@@ -446,11 +450,14 @@ void App::createAction(TodoList &tlObj, const std::string &p,
       tObj.getDueDate().setDateFromString(due);
 
     } catch (const std::exception& e) {
-      exitWithError(InvalidTaskErr);
+      createAction(tlObj, p, t);
+      createAction(tlObj, p, t, due, isDue);
     }
 
   } catch (const std::exception& e) {
-    exitWithError(InvalidProjectErr);
+    createAction(tlObj, p);
+    createAction(tlObj, p, t);
+    createAction(tlObj, p, t, due, isDue);
   }
     
 }
@@ -595,9 +602,8 @@ void App::updateAction(TodoList &tlObj) {
     updateAction(tlObj, opt.project, opt.task);
   }
 
-  // for --due same behaviour as create
   if(opt.dueParsable()) {
-    createAction(tlObj, opt.project, opt.task, opt.due, opt.hasDue);
+    updateAction(tlObj, opt.project, opt.task, opt.due);
   }
 
   // for --complete/--incomplete same behaviour as create
@@ -669,6 +675,33 @@ void App::updateAction(TodoList &tlObj, const std::string &p, const std::string 
       exitWithError(UpdateTaskValueErr);
     }
 
+}
+
+
+// Due date should be created/replaced
+// If the due argument is empty, (re)set the due date to uninitalised
+// If the due argument is not a valid date (or is empty) 
+// output an error message to stderr and return an exit code of 1.
+// Otherwise don't output anything and exit with a code of 0.
+void App::updateAction(TodoList &tlObj, const std::string &p,
+                         const std::string &t,  const std::string &due) {
+
+  try {
+    auto& pObj = tlObj.getProject(p);
+
+    try {
+      auto& tObj = pObj.getTask(t);
+
+      tObj.getDueDate().setDateFromString(due);
+
+    } catch (const std::exception& e) {
+      exitWithError(InvalidTaskErr);
+    }
+
+  } catch (const std::exception& e) {
+    exitWithError(InvalidProjectErr);
+  }
+    
 }
 
 

@@ -105,6 +105,8 @@ void deleteAction(TodoList &tlObj, const std::string &p, const std::string &t, b
 void updateAction(TodoList &tlObj);
 void updateAction(TodoList &tlObj, const std::string &p);
 void updateAction(TodoList &tlObj, const std::string &p, const std::string &t);
+void updateAction(TodoList &tlObj, const std::string &p, const std::string &t, 
+                        const std::string &due);
 
 
 

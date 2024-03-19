@@ -248,7 +248,7 @@ void TodoList::save(const std::string& filename) {
         throw FileOpenError(filename);
     }
     
-    file << json().dump();
+    file << str();
 
     file.close();
 }
