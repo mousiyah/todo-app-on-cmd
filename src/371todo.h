@@ -82,6 +82,7 @@ std::string getJSON(TodoList &tl, const std::string &p, const std::string &t);
 std::string getJSON(TodoList &tl, const std::string &p, const std::string &task,
                     const std::string &tag);
 
+
 void createAction(TodoList &tlObj);
 void createAction(TodoList &tlObj, const std::string &p);
 void createAction(TodoList &tlObj, const std::string &p, const std::string &t);
@@ -102,6 +103,10 @@ void deleteAction(TodoList &tlObj, const std::string &p, const std::string &t, b
 
 
 void updateAction(TodoList &tlObj);
+void updateAction(TodoList &tlObj, const std::string &p);
+void updateAction(TodoList &tlObj, const std::string &p, const std::string &t);
+
+
 
 void exitWithError(const std::string& message);
 
@@ -114,6 +119,9 @@ const std::string BothCompletedFlagsErr = "Error: both --completed and --incompl
 const std::string InvalidProjectErr = "Error: invalid project argument(s).";
 const std::string InvalidTaskErr = "Error: invalid task argument(s).";
 const std::string InvalidTagErr = "Error: invalid tag argument.";
+
+const std::string UpdateProjectValueErr = "Error: --project value should be in the format oldidentifier:newidentifier";
+const std::string UpdateTaskValueErr = "Error: --task value should be in the format oldidentifier:newidentifier";
 
 } // namespace App
 

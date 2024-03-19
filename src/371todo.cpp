@@ -556,13 +556,13 @@ void App::deleteAction(TodoList &tlObj, const std::string &p,
 // If not successful, (i.e., no task/project exists), 
 // output an error message to stderr and return an exit code of 1.
 void App::deleteAction(TodoList &tlObj, const std::string &p,
-                         const std::string &task, bool isDue) {
+                         const std::string &t, bool isDue) {
 
   try {
     auto& pObj = tlObj.getProject(p);
 
     try {
-      auto& tObj = pObj.getTask(task);
+      auto& tObj = pObj.getTask(t);
 
       tObj.getDueDate().setUninitialised();
 
@@ -580,27 +580,40 @@ void App::deleteAction(TodoList &tlObj, const std::string &p,
 
 
 
-// update action argument
+// --action update implementation
 void App::updateAction(TodoList &tlObj) {
   
   // The action program argument update can be ignored for 'tag'.
   // Outputs and exit code values should delegated to the task and/or project arguments instead
   opt.hasTag = false;
 
-  // The flags are incompatible with one another 
-  // so can only be used in isolation and not in combination. 
-  // If used in combination, 
-  // output an error message to stderr and return an exit code of 1.
-  if (opt.completed && opt.incomplete) {
-    exitWithError(BothCompletedFlagsErr);
+  if (opt.projectParsable()) {
+    updateAction(tlObj, opt.project);
   }
 
-  // Rename project in database.
-  // project argument in the format oldidentifier:newidentifier
-  // If successfull dont output anything and return an exit code of 0.
-  // If such a project does not exist 
-  // output an error message to stderr and return an exit code of 1.
-  if (opt.projectParsable()) {
+  if (opt.taskParsable()) {
+    updateAction(tlObj, opt.project, opt.task);
+  }
+
+  // for --due same behaviour as create
+  if(opt.dueParsable()) {
+    createAction(tlObj, opt.project, opt.task, opt.due, opt.hasDue);
+  }
+
+  // for --complete/--incomplete same behaviour as create
+  if(opt.completeParsable()) {
+    createAction(tlObj, opt.project, opt.task, opt.completed? true : false);
+  }
+
+}
+
+
+// Rename project in database.
+// project argument in the format oldidentifier:newidentifier
+// If successfull dont output anything and return an exit code of 0.
+// If such a project does not exist 
+// output an error message to stderr and return an exit code of 1.
+void App::updateAction(TodoList &tlObj, const std::string &p){
 
     if (opt.project.find(':') != std::string::npos) {
       std::istringstream iss(opt.project);
@@ -609,35 +622,27 @@ void App::updateAction(TodoList &tlObj) {
       std::getline(iss, newIdent);
 
       try{
-        tlObj.getProject(oldIdent).setIdent(newIdent);
+        auto& pObj = tlObj.getProject(oldIdent);
+        pObj.setIdent(newIdent);
+
       } catch (const std::exception& e) {
-        exitWithError(e.what());
+        exitWithError(InvalidProjectErr);
       }
      
     } else {
-      exitWithError("Error: Project argument should be in the format oldidentifier:newidentifier");
+      exitWithError(UpdateProjectValueErr);
     }
+
   }
 
-  // Rename task or/and project that belongs to project in database.
+
+  // Rename task that belongs to project in database.
   // task argument in the format oldidentifier:newidentifier
   // If successfull dont output anything and return an exit code of 0.
-  // If such a task/project does not exist 
+  // If such a task does not exist 
   // output an error message to stderr and return an exit code of 1.
-  if (opt.taskParsable()) {
 
-    if (opt.project.find(':') != std::string::npos) {
-      std::istringstream iss(opt.task);
-      std::string oldIdent, newIdent;
-      std::getline(iss, oldIdent, ':');
-      std::getline(iss, newIdent);
-
-      try {
-        tlObj.getProject(opt.project).setIdent(newIdent);
-      } catch (const std::exception& e) {
-        exitWithError(e.what());
-      }
-    }
+void App::updateAction(TodoList &tlObj, const std::string &p, const std::string &t) {
 
     if (opt.task.find(':') != std::string::npos) {
       std::istringstream iss(opt.task);
@@ -646,41 +651,27 @@ void App::updateAction(TodoList &tlObj) {
       std::getline(iss, newIdent);
 
       try {
-        tlObj.getProject(opt.project).getTask(oldIdent).setIdent(newIdent);
+        auto& pObj = tlObj.getProject(opt.project);
+        
+        try {
+          auto& tObj = pObj.getTask(oldIdent);
+          tObj.setIdent(newIdent);
+
+        } catch (const std::exception& e) {
+          exitWithError(InvalidTaskErr);
+        }
+
       } catch (const std::exception& e) {
-        exitWithError(e.what());
+        exitWithError(InvalidProjectErr);
       }
+
     } else {
-      exitWithError("Error: Task argument should be in the format oldidentifier:newidentifier");
+      exitWithError(UpdateTaskValueErr);
     }
-  }
-
-  // If the due argument is empty, (re)set the due date to uninitalised.
-  // If the due argument is not a valid date and is also not empty, 
-  // output an error message to stderr and return an exit code of 1. 
-  // Otherwise set the due date, if it has not been set yet.
-  // If a due date already exists, overwrite it. 
-  // In both cases should not output anything and exit with a code of 0.
-  // If project/task doesn't exist, error message to stderr and return exit code of 1.
-  if(opt.dueParsable()) {
-    try {
-      tlObj.getProject(opt.project).getTask(opt.task).getDueDate().setDateFromString(opt.due);
-    } catch (const std::exception& e) {
-      exitWithError(e.what());
-    }
-  }
-
-  // Set to true (for completed) or false (for incomplete).
-  // If project/task doesn't exist, error message to stderr and return exit code of 1.
-  if(opt.completeParsable()) {
-    try {
-      tlObj.getProject(opt.project).getTask(opt.task).setComplete(opt.completed? true : false);
-    } catch (const std::exception& e) {
-      exitWithError(e.what());
-    }
-  }
 
 }
+
+
 
 
 
@@ -688,7 +679,6 @@ void App::updateAction(TodoList &tlObj) {
 // if options given are enough to perform certain action, it returns true.
 // For example, if the Action is '--action create --project value',
 // projectParsable() returns true.
-
 bool App::ActionOptions::noneParsable() {
   return !hasDue && !hasTag && !completed && !incomplete && !hasTask
             && !hasProject;
