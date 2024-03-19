@@ -334,9 +334,8 @@ void App::createAction(TodoList &tlObj) {
     createAction(tlObj, opt.project, opt.task, opt.tag);
   }
 
-  bool isDue = true; // to differ from parsing tag
   if(opt.dueParsable()) {
-    createAction(tlObj, opt.project, opt.task, opt.due, isDue);
+    createAction(tlObj, opt.project, opt.task, opt.due, opt.hasDue);
   }
 
   if(opt.completeParsable()) {
@@ -474,9 +473,8 @@ void App::deleteAction(TodoList &tlObj) {
         deleteAction(tlObj, opt.project, opt.task, opt.tag);
     }
 
-    bool isDue = true; // value of due doesn't matter on delete && to differ from parsing tag
     if (opt.dueParsable()) {
-        deleteAction(tlObj, opt.project, opt.task, isDue);
+        deleteAction(tlObj, opt.project, opt.task, opt.hasDue);
     }
 
 }
@@ -580,10 +578,6 @@ void App::deleteAction(TodoList &tlObj, const std::string &p,
 // update action argument
 void App::updateAction(TodoList &tlObj) {
   
-  if (!opt.hasProject) {
-    exitWithError(MissingArgsErr);
-  }
-
   // The action program argument update can be ignored for 'tag'.
   // Outputs and exit code values should delegated to the task and/or project arguments instead
   opt.hasTag = false;
