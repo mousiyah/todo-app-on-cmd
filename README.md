@@ -12,26 +12,30 @@ I have implemented everything specified and passed both unit and autograder test
 
 ### MAIN PROGRAM LOGIC 
 
-In namespace App (371todo.cpp & 371todo.h) I have implemented struct ActionOptions to extract, validate and apply Action options. It made my code more clear and efficient. Before the Action corresponding method is called, program extracts Acton argument options, and sets struct member variables accordingly. If they are valid, only then Action methods are called.
+- In namespace App (371todo.cpp & 371todo.h) I have implemented struct ActionOptions to extract, validate and apply Action options. It made my code more clear and efficient. Before the Action corresponding method is called, program extracts Acton argument options, and sets struct member variables accordingly. If they are valid, only then Action methods are called.
 
-I have implemented action methods similar to how initially Action json (getJSON()) was provided. I did overload each CreateAction(), UpdateAction(), DeleteAction() methods with different arguments to perform corresponding logic. Initially called action methods call their overloads depending on extracted Action options.
+- I have implemented action methods similar to how initially Action json (getJSON()) was provided. I did overload each CreateAction(), UpdateAction(), DeleteAction() methods with different arguments to perform corresponding logic. Initially called action methods call their overloads depending on extracted Action options.
 
-These methods perform the rest of the logic. I made sure to catch any exceptions arising and handle them gracefully.
+- These methods perform the rest of the logic. I made sure to catch any exceptions arising and handle them gracefully. 
+
+- all action calls use try and catch, to catch the exceptions I throw in my other classes.
+
+- some exceptions are not handled, for example failing to insert project/task/tag into container for other reasons (e.g. not enough memory allocated), but this is done on purpose, to throw exception and terminate the program.
 
 -- -- -- -- -- -- -- -- -- -- --
 
 ### LOAD/SAVE TODOLIST
 
-To load the TodoList from json file, I made parse() method for each class that needs to be loaded. Each class's parse method loads passed json data into its object's container. e.g. todoList.parse() will load projects, each project will load its tasks, each task will load its attributes.
+- To load the TodoList from json file, I made parse() method for each class that needs to be loaded. Each class's parse method loads passed json data into its object's container. e.g. todoList.parse() will load projects, each project will load its tasks, each task will load its attributes.
 
-With the same logic works save(). Each class has its own json() tostr() methods.
+- With the same logic works save(). Each class has its own json() tostr() methods.
 
 -- -- -- -- -- -- -- -- -- -- --
 
 ### BONUS FEATURE
 
-Delete many tags at the same time. 
+- Delete many tags at the same time. 
 In the specification it was said its possible to create many tags at the same time (--tag tag1,tag2,tag3). I used the same logic for deleting many tags.
 
 
-- p.s. pray I can land a good job please ^^
+p.s. Please give me full marks, I worked hard on it and pray I can land a good job please ^^

@@ -186,21 +186,15 @@ std::string App::getJSON(TodoList &tlObj) {
   // Outputs and exit code values should delegated to the tag, task, and project arguments instead
   opt.hasDue = false;
 
-  if (opt.noneParsable()) {
+  if(opt.hasTag) {
+    return getJSON(tlObj, opt.project, opt.task, opt.tag);
+  } else if (opt.hasTask) {
+    return getJSON(tlObj, opt.project, opt.task);
+  } else if (opt.hasProject) {
+    return getJSON(tlObj, opt.project);
+  } else {
     return tlObj.str();
   }
-
-  if (opt.projectParsable()) {
-    return getJSON(tlObj, opt.project);
-  }
-
-  if (opt.taskParsable()) {
-    return getJSON(tlObj, opt.project, opt.task);
-  }
-
-  if(opt.tagParsable()) {
-    return getJSON(tlObj, opt.project, opt.task, opt.tag);
-  }  
 
   return {};
 }
@@ -316,23 +310,23 @@ std::string App::getJSON(TodoList &tlObj, const std::string &p,
 // --action create implementation
 void App::createAction(TodoList &tlObj) {
 
-  if (opt.projectParsable()) {
+  if (opt.hasProject) {
     createAction(tlObj, opt.project);
   }
 
-  if (opt.taskParsable()) {
+  if (opt.hasTask) {
     createAction(tlObj, opt.project, opt.task);
   }
 
-  if(opt.tagParsable()) {
+  if(opt.hasTag) {
     createAction(tlObj, opt.project, opt.task, opt.tag);
   }
 
-  if(opt.dueParsable()) {
+  if(opt.hasDue) {
     createAction(tlObj, opt.project, opt.task, opt.due, opt.hasDue);
   }
 
-  if(opt.completeParsable()) {
+  if(opt.hasComplete) {
     createAction(tlObj, opt.project, opt.task, opt.completed? true : false);
   }
 
@@ -358,8 +352,7 @@ void App::createAction(TodoList &tlObj, const std::string &p,
     pObj.newTask(t);
 
   } catch (const std::exception& e) {
-    createAction(tlObj, p);
-    createAction(tlObj, p, t);
+    exitWithError(InvalidProjectErr);
   }
     
 }
@@ -387,14 +380,11 @@ void App::createAction(TodoList &tlObj, const std::string &p,
       }
 
     } catch (const std::exception& e) {
-      createAction(tlObj, p, task);
-      createAction(tlObj, p, task, tags);
+      exitWithError(InvalidTaskErr);
     }
-
+  
   } catch (const std::exception& e) {
-    createAction(tlObj, p);
-    createAction(tlObj, p, task);
-    createAction(tlObj, p, task, tags);
+    exitWithError(InvalidProjectErr);
   }
     
 }
@@ -443,14 +433,11 @@ void App::createAction(TodoList &tlObj, const std::string &p,
       tObj.getDueDate().setDateFromString(due);
 
     } catch (const std::exception& e) {
-      createAction(tlObj, p, t);
-      createAction(tlObj, p, t, due, isDue);
+      exitWithError(InvalidTaskErr);
     }
 
   } catch (const std::exception& e) {
-    createAction(tlObj, p);
-    createAction(tlObj, p, t);
-    createAction(tlObj, p, t, due, isDue);
+    exitWithError(InvalidProjectErr);
   }
     
 }
@@ -460,21 +447,18 @@ void App::createAction(TodoList &tlObj, const std::string &p,
 // --action delete implementation
 void App::deleteAction(TodoList &tlObj) {
 
-    if (opt.projectParsable()) {
-        deleteAction(tlObj, opt.project);
-    }
-
-    if (opt.taskParsable()) {
-        deleteAction(tlObj, opt.project, opt.task);
-    }
-
-    if (opt.tagParsable()) {
-        deleteAction(tlObj, opt.project, opt.task, opt.tag);
-    }
-
-    if (opt.dueParsable()) {
+    if (opt.hasDue) {
         deleteAction(tlObj, opt.project, opt.task, opt.hasDue);
     }
+
+    if (opt.hasTag) {
+        deleteAction(tlObj, opt.project, opt.task, opt.tag);
+    } else if (opt.hasTask) {
+        deleteAction(tlObj, opt.project, opt.task);
+    } else if (opt.hasProject) {
+        deleteAction(tlObj, opt.project);
+    }
+    
 
 }
 
@@ -583,21 +567,23 @@ void App::updateAction(TodoList &tlObj) {
   // Outputs and exit code values should delegated to the task and/or project arguments instead
   opt.hasTag = false;
 
-  if (opt.projectParsable()) {
-    updateAction(tlObj, opt.project);
+  // for --complete/--incomplete same behaviour as create
+  if(opt.hasComplete) {
+    createAction(tlObj, opt.project, opt.task, opt.completed? true : false);
   }
 
-  if (opt.taskParsable()) {
-    updateAction(tlObj, opt.project, opt.task);
-  }
-
-  if(opt.dueParsable()) {
+  if(opt.hasDue) {
     updateAction(tlObj, opt.project, opt.task, opt.due);
   }
+  
+  if (!opt.hasComplete && !opt.hasDue) {
 
-  // for --complete/--incomplete same behaviour as create
-  if(opt.completeParsable()) {
-    createAction(tlObj, opt.project, opt.task, opt.completed? true : false);
+    if (opt.hasTask) {
+      updateAction(tlObj, opt.project, opt.task);
+    } else if (opt.hasProject) {
+      updateAction(tlObj, opt.project);
+    }
+
   }
 
 }
@@ -693,39 +679,6 @@ void App::updateAction(TodoList &tlObj, const std::string &p,
 
 
 
-// Action Options Struct methods implementation
-// if options given are enough to perform certain action, it returns true.
-// For example, if the Action is '--action create --project value',
-// projectParsable() returns true.
-
-bool App::ActionOptions::noneParsable() {
-  return !hasDue && !hasTag && !completed && !incomplete && !hasTask
-            && !hasProject;
-}
-
-bool App::ActionOptions::projectParsable() {
-  return !hasDue && !hasTag && !completed && !incomplete && !hasTask
-            && hasProject;
-}
-
-bool App::ActionOptions::taskParsable() {
-  return !hasDue && !hasTag && !completed && !incomplete
-            && hasTask && hasProject;
-}
-
-bool App::ActionOptions::tagParsable() {
-  return hasTag && hasTask && hasProject;
-}
-
-bool App::ActionOptions::dueParsable() {
-  return hasDue && hasTask && hasProject;
-}
-
-bool App::ActionOptions::completeParsable() {
-  return (completed || incomplete) && hasTask && hasProject;
-}
-
-
 // Extracts options given with an action and initialises ActionOptions opt.
 void App::ActionOptions::extractArgs(const cxxopts::ParseResult &args) {
 
@@ -733,6 +686,9 @@ void App::ActionOptions::extractArgs(const cxxopts::ParseResult &args) {
     hasTask = args.count("task") > 0;
     hasTag = args.count("tag") > 0;
     hasDue = args.count("due") > 0;
+    completed = args.count("completed") > 0;
+    incomplete = args.count("incomplete") > 0;
+    hasComplete = completed || incomplete;
 
     if (hasProject) {
       project = args["project"].as<std::string>();
@@ -747,35 +703,34 @@ void App::ActionOptions::extractArgs(const cxxopts::ParseResult &args) {
     }
 
     if(hasDue) {
-      opt.due = args["due"].as<std::string>();
+      due = args["due"].as<std::string>();
     }
 
-    completed = args.count("completed") > 0;
-    incomplete = args.count("incomplete") > 0;
 
 }
 
 // Check validity of options given
 void App::ActionOptions::checkValidity(Action a) {
-  
-  // for JSON we can provide no option
-  if (noneParsable() && a != Action::JSON ) {
-    exitWithError(MissingArgsErr);
-  }
-
-  // Complete && incomplete flags are incompatible with one another 
-  if (completed && incomplete) {
-    exitWithError(BothCompletedFlagsErr);
-  }
 
   // no project argument given
-  if(hasTask && !hasProject) {
+  if(!hasProject && (hasTask || hasTag || hasDue || completed || incomplete)) {
     exitWithError(MissingProjectArgsErr);
   }
 
   // no task argument given
   if(!hasTask && (hasTag || hasDue || completed || incomplete)) {
     exitWithError(MissingTaskArgsErr);
+  }
+
+  // for JSON we can provide no option
+  if (!hasProject && !hasTask && !hasTag && !hasDue && !hasComplete
+      && a != Action::JSON ) {
+    exitWithError(MissingArgsErr);
+  }
+
+  // Complete && incomplete flags are incompatible with one another 
+  if (completed && incomplete) {
+    exitWithError(BothCompletedFlagsErr);
   }
 
 }

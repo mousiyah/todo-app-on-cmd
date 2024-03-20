@@ -53,16 +53,10 @@ struct ActionOptions {
     bool hasTask;
     bool hasTag;
     bool hasDue;
+    bool hasComplete;
 
     bool completed;
     bool incomplete;
-
-    bool noneParsable();
-    bool projectParsable();
-    bool taskParsable();
-    bool tagParsable();
-    bool dueParsable();
-    bool completeParsable();
 
     void extractArgs(const cxxopts::ParseResult &args);
     void checkValidity(Action a);
